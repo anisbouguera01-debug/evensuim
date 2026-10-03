@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { PageId } from '../types';
-import { EvensiumLogo } from './EvensiumLogo';
+import { EvensiumLogo, PILL_DIRECTIONS } from './EvensiumLogo';
+import { gsap, SplitText, useGSAP, MQ, SCRUB } from '../animations/gsap';
 import { 
   MapPin, 
   Phone, 
@@ -38,9 +39,52 @@ export const Footer: React.FC<FooterProps> = ({
   });
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
+  const root = useRef<HTMLElement>(null);
+
+  // Conclusion lente : les blocs montent, puis le X se réassemble (miroir du hero)
+  // pendant que le grand wordmark s'écrit lettre par lettre.
+  useGSAP(
+    () => {
+      const footer = root.current;
+      if (!footer) return;
+      const q = gsap.utils.selector(footer);
+      const mm = gsap.matchMedia();
+      mm.add({ desktop: MQ.desktop, mobile: MQ.mobile }, (ctx) => {
+        const d = ctx.conditions?.desktop ? 1 : 0.5;
+        (q('[data-footer-block]') as HTMLElement[]).forEach((block) => {
+          gsap.from(block, {
+            y: 80 * d,
+            opacity: 0,
+            ease: 'power2.out',
+            scrollTrigger: { trigger: block, start: 'top 98%', end: 'top 70%', scrub: SCRUB },
+          });
+        });
+
+        const finale = q('[data-footer-finale]')[0] as HTMLElement;
+        const word = SplitText.create(q('[data-footer-word]')[0] as HTMLElement, { type: 'chars', mask: 'chars' });
+        gsap
+          .timeline({ scrollTrigger: { trigger: finale, start: 'top 95%', end: 'bottom bottom', scrub: SCRUB } })
+          .from(
+            q('[data-footer-finale] [data-pill]'),
+            {
+              x: (_: number, el: Element) => PILL_DIRECTIONS[(el as HTMLElement).dataset.pill as keyof typeof PILL_DIRECTIONS].x * 90,
+              y: (_: number, el: Element) => PILL_DIRECTIONS[(el as HTMLElement).dataset.pill as keyof typeof PILL_DIRECTIONS].y * 90,
+              opacity: 0,
+              ease: 'power3.out',
+              stagger: 0.05,
+            },
+            0,
+          )
+          .from(word.chars, { yPercent: 110, ease: 'power3.out', stagger: 0.06 }, 0.15);
+        return () => word.revert();
+      });
+      return () => mm.revert();
+    },
+    { scope: root },
+  );
 
   return (
-    <footer className="bg-[#f5f5f7] text-[#515154] border-t border-black/10 pt-16 pb-12 relative overflow-hidden font-sans">
+    <footer ref={root} className="bg-[#f5f5f7] text-[#515154] border-t border-black/10 pt-16 pb-12 relative overflow-hidden font-sans">
       {/* Background Subtle Glows */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-100/40 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-100/40 rounded-full blur-3xl pointer-events-none" />
@@ -48,7 +92,7 @@ export const Footer: React.FC<FooterProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Section de Réservation de Stand et Contacts Directs */}
-        <div className="bg-white border border-black/10 rounded-3xl p-8 sm:p-10 mb-12 shadow-lg relative overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div data-footer-block className="bg-white border border-black/10 rounded-3xl p-8 sm:p-10 mb-12 shadow-lg relative overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-10">
           
           {/* Column 1: Stand Reservation Form (7 cols) */}
           <div className="lg:col-span-7">
@@ -127,7 +171,7 @@ export const Footer: React.FC<FooterProps> = ({
                       value={formData.companyName}
                       onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                       placeholder="Ex: Chocolaterie Royale"
-                      className="w-full bg-[#f5f5f7] border border-black/10 rounded-xl px-4 py-2.5 text-sm text-[#1d1d1f] focus:outline-none focus:border-[#0066cc]"
+                      className="w-full bg-[#f5f5f7] border border-black/10 rounded-xl px-4 py-2.5 text-sm text-[#1d1d1f] focus:outline-none focus:border-[#0066cc] field"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -140,7 +184,7 @@ export const Footer: React.FC<FooterProps> = ({
                       value={formData.contactPerson}
                       onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
                       placeholder="Ex: M. Malik Ben"
-                      className="w-full bg-[#f5f5f7] border border-black/10 rounded-xl px-4 py-2.5 text-sm text-[#1d1d1f] focus:outline-none focus:border-[#0066cc]"
+                      className="w-full bg-[#f5f5f7] border border-black/10 rounded-xl px-4 py-2.5 text-sm text-[#1d1d1f] focus:outline-none focus:border-[#0066cc] field"
                     />
                   </div>
                 </div>
@@ -156,7 +200,7 @@ export const Footer: React.FC<FooterProps> = ({
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       placeholder="Ex: +213 555 12 34 56"
-                      className="w-full bg-[#f5f5f7] border border-black/10 rounded-xl px-4 py-2.5 text-sm text-[#1d1d1f] focus:outline-none focus:border-[#0066cc]"
+                      className="w-full bg-[#f5f5f7] border border-black/10 rounded-xl px-4 py-2.5 text-sm text-[#1d1d1f] focus:outline-none focus:border-[#0066cc] field"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -169,7 +213,7 @@ export const Footer: React.FC<FooterProps> = ({
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       placeholder="Ex: contact@entreprise.com"
-                      className="w-full bg-[#f5f5f7] border border-black/10 rounded-xl px-4 py-2.5 text-sm text-[#1d1d1f] focus:outline-none focus:border-[#0066cc]"
+                      className="w-full bg-[#f5f5f7] border border-black/10 rounded-xl px-4 py-2.5 text-sm text-[#1d1d1f] focus:outline-none focus:border-[#0066cc] field"
                     />
                   </div>
                 </div>
@@ -182,7 +226,7 @@ export const Footer: React.FC<FooterProps> = ({
                     <select
                       value={formData.salon}
                       onChange={(e) => setFormData({ ...formData, salon: e.target.value })}
-                      className="w-full bg-[#f5f5f7] border border-black/10 rounded-xl px-4 py-2.5 text-sm text-[#1d1d1f] focus:outline-none focus:border-[#0066cc]"
+                      className="w-full bg-[#f5f5f7] border border-black/10 rounded-xl px-4 py-2.5 text-sm text-[#1d1d1f] focus:outline-none focus:border-[#0066cc] field"
                     >
                       <option value="chocorium2026">CHOCORIUM 2026 (Chocolat & Confiserie)</option>
                       <option value="milktec">MILKTEC 2026 (Salon du Lait & Industrie)</option>
@@ -196,7 +240,7 @@ export const Footer: React.FC<FooterProps> = ({
                     <select
                       value={formData.surface}
                       onChange={(e) => setFormData({ ...formData, surface: e.target.value })}
-                      className="w-full bg-[#f5f5f7] border border-black/10 rounded-xl px-4 py-2.5 text-sm text-[#1d1d1f] focus:outline-none focus:border-[#0066cc]"
+                      className="w-full bg-[#f5f5f7] border border-black/10 rounded-xl px-4 py-2.5 text-sm text-[#1d1d1f] focus:outline-none focus:border-[#0066cc] field"
                     >
                       <option value="9">9 m² (Stand Standard)</option>
                       <option value="12">12 m² (Moyen)</option>
@@ -216,14 +260,15 @@ export const Footer: React.FC<FooterProps> = ({
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     placeholder="Ex: Emplacement d'angle souhaité, raccordement eau, électricité triphasée..."
-                    className="w-full bg-[#f5f5f7] border border-black/10 rounded-xl px-4 py-2.5 text-sm text-[#1d1d1f] focus:outline-none focus:border-[#0066cc] resize-none"
+                    className="w-full bg-[#f5f5f7] border border-black/10 rounded-xl px-4 py-2.5 text-sm text-[#1d1d1f] focus:outline-none focus:border-[#0066cc] resize-none field"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="w-full sm:w-auto px-6 py-3 bg-[#0f8a53] hover:bg-[#0c6b40] disabled:bg-[#0f8a53]/60 text-white font-bold text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+                  aria-busy={formLoading}
+                  className="btn-cine w-full sm:w-auto px-6 py-3 bg-[#0f8a53] hover:bg-[#0c6b40] disabled:bg-[#0f8a53]/60 text-white font-bold text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
                 >
                   {formLoading ? (
                     <>
@@ -310,7 +355,7 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
 
         {/* Top Newsletter & Instant Quote Callout */}
-        <div className="bg-white border border-black/10 rounded-3xl p-8 sm:p-10 mb-16 shadow-lg relative overflow-hidden flex flex-col lg:flex-row items-center justify-between gap-8">
+        <div data-footer-block className="bg-white border border-black/10 rounded-3xl p-8 sm:p-10 mb-16 shadow-lg relative overflow-hidden flex flex-col lg:flex-row items-center justify-between gap-8">
           <div className="max-w-2xl">
             <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-[#0066cc]/10 text-[#0066cc] border border-[#0066cc]/20 mb-3">
               <Award className="w-3.5 h-3.5 text-[#0066cc]" />
@@ -328,8 +373,9 @@ export const Footer: React.FC<FooterProps> = ({
             <div className="relative flex-1 sm:w-80">
               <input
                 type="email"
+                aria-label="Votre adresse email professionnelle"
                 placeholder="Votre adresse email professionnelle"
-                className="w-full bg-[#f5f5f7] border border-black/10 rounded-xl px-4 py-3 text-sm text-[#1d1d1f] placeholder-slate-400 focus:outline-none focus:border-[#0066cc]"
+                className="w-full bg-[#f5f5f7] border border-black/10 rounded-xl px-4 py-3 text-sm text-[#1d1d1f] placeholder-slate-400 focus:outline-none focus:border-[#0066cc] field"
               />
             </div>
             <button className="px-6 py-3 bg-[#0066cc] hover:bg-[#004499] text-white font-bold text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 shrink-0">
@@ -340,7 +386,7 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
 
         {/* Main Footer Links */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-black/10">
+        <div data-footer-block className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-black/10">
           
           {/* Brand Info */}
           <div className="lg:col-span-2 space-y-4">
@@ -513,6 +559,12 @@ export const Footer: React.FC<FooterProps> = ({
               Accès SAFEX
             </button>
           </div>
+        </div>
+
+        {/* Finale : le symbole se réassemble et le wordmark s'écrit */}
+        <div data-footer-finale className="pt-14 sm:pt-20 flex items-end gap-4 sm:gap-8 select-none" aria-hidden="true">
+          <EvensiumLogo size={120} showText={false} animatable className="footer-finale-mark shrink-0 mb-[0.6vw]" />
+          <span data-footer-word className="footer-wordmark">evensium</span>
         </div>
 
       </div>
