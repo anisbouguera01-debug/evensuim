@@ -743,6 +743,58 @@ html.scroll-locked body {
   transform: scale(1);
 }
 
+/* =====================================================================
+   SCÈNES PLEIN ÉCRAN (accueil) — une scène = une section pinnée de 100svh
+   ===================================================================== */
+.scene-stage {
+  height: 100svh;
+  min-height: 560px;
+}
+.scene-panel {
+  backface-visibility: hidden;
+}
+.panorama-track {
+  width: max-content;
+}
+
+/* Mouvement réduit : les plans s'empilent en sections lisibles, rien n'est caché */
+@media (prefers-reduced-motion: reduce) {
+  .scene-stage {
+    height: auto;
+    min-height: 0;
+  }
+  .scene-panel,
+  .scene-overlay {
+    position: relative !important;
+    inset: auto !important;
+    min-height: 100svh;
+    transform: none !important;
+    clip-path: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  .scene-overlay {
+    min-height: 0;
+    padding-block: 18svh 6svh;
+  }
+  .reduce-hide {
+    display: none !important;
+  }
+  .reduce-dark {
+    background: #0b1324 !important;
+  }
+  .panorama-track {
+    width: auto;
+    flex-direction: column;
+    align-items: stretch;
+    padding-block: 18svh 10svh;
+  }
+  .panel-shrink {
+    width: auto !important;
+    margin: 0 !important;
+  }
+}
+
 /* Accessibilité : mouvement réduit → aucune animation décorative */
 @media (prefers-reduced-motion: reduce) {
   *,

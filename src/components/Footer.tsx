@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { PageId } from '../types';
-import { EvensiumLogo, PILL_DIRECTIONS } from './EvensiumLogo';
+import { EvensiumLogo } from './EvensiumLogo';
 import { gsap, SplitText, useGSAP, MQ, SCRUB } from '../animations/gsap';
 import { 
   MapPin, 
@@ -64,17 +64,8 @@ export const Footer: React.FC<FooterProps> = ({
         const word = SplitText.create(q('[data-footer-word]')[0] as HTMLElement, { type: 'chars', mask: 'chars' });
         gsap
           .timeline({ scrollTrigger: { trigger: finale, start: 'top 95%', end: 'bottom bottom', scrub: SCRUB } })
-          .from(
-            q('[data-footer-finale] [data-pill]'),
-            {
-              x: (_: number, el: Element) => PILL_DIRECTIONS[(el as HTMLElement).dataset.pill as keyof typeof PILL_DIRECTIONS].x * 90,
-              y: (_: number, el: Element) => PILL_DIRECTIONS[(el as HTMLElement).dataset.pill as keyof typeof PILL_DIRECTIONS].y * 90,
-              opacity: 0,
-              ease: 'power3.out',
-              stagger: 0.05,
-            },
-            0,
-          )
+          // Le logo d'origine arrive comme un bloc (rotation + échelle), jamais modifié
+          .from(q('[data-footer-mark]'), { scale: 0.2, rotate: -180, opacity: 0, ease: 'power3.out' }, 0)
           .from(word.chars, { yPercent: 110, ease: 'power3.out', stagger: 0.06 }, 0.15);
         return () => word.revert();
       });
@@ -563,7 +554,9 @@ export const Footer: React.FC<FooterProps> = ({
 
         {/* Finale : le symbole se réassemble et le wordmark s'écrit */}
         <div data-footer-finale className="pt-14 sm:pt-20 flex items-end gap-4 sm:gap-8 select-none" aria-hidden="true">
-          <EvensiumLogo size={120} showText={false} animatable className="footer-finale-mark shrink-0 mb-[0.6vw]" />
+          <div data-footer-mark className="footer-finale-mark shrink-0 mb-[0.6vw]">
+            <EvensiumLogo size={120} showText={false} />
+          </div>
           <span data-footer-word className="footer-wordmark">evensium</span>
         </div>
 

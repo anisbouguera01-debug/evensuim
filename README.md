@@ -21,8 +21,9 @@ L'accueil est une **expérience cinématique pilotée par le scroll** (GSAP + Sc
 src/
   animations/           GSAP (plugins, media queries), Lenis, révélations génériques
   components/
-    home/               Les 7 plans de l'accueil (HomeHero, AboutSection, SalonsScenes,
-                        UpcomingEditions, ServicesGrid, WhyUs, ContactSection)
+    scenes/             Les 7 scènes plein écran de l'accueil (HeroFilm, AboutPanorama, SalonsReel,
+                        EditionsTakeover, ServicesSequence, WhyKinetic, CtaZoom)
+    home/               Formulaire de contact de l'accueil
     motion/             Briques réutilisables : AnimatedText, StatValue (compteurs),
                         Magnetic, CustomCursor, ScrollProgress, PageTransition
     Navbar / MobileMenu / Footer / EvensiumLogo
@@ -33,6 +34,6 @@ src/
 ## Principes
 
 - **Scrub partout** : les propriétés suivent la progression du scroll (avance, recule, s'arrête avec l'utilisateur).
-- **Desktop / mobile** via `gsap.matchMedia()` : sections pinnées uniquement sur grand écran (≥1024 px de large et ≥640 px de haut) ; le mobile garde un scroll natif et des animations allégées.
+- **Scènes plein écran pinnées sur tous les écrans** (`useScene`) avec un cadrage propre au téléphone ; tactile natif (Lenis uniquement pour la molette).
 - **`prefers-reduced-motion`** : aucune animation de scroll, pas de smooth scroll, contenu entièrement visible.
 - Animations en `transform` / `opacity` / `clip-path` ; images en WebP (~85 % plus légères), pages et modales en code splitting.

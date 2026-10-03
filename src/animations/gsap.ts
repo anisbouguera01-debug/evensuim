@@ -22,6 +22,8 @@ export const MQ = {
   /** Tout le reste (mobile, tablette, petits laptops), animations allégées. */
   mobile:
     '(max-width: 1023px) and (prefers-reduced-motion: no-preference), (max-height: 639px) and (prefers-reduced-motion: no-preference)',
+  /** Toute plateforme acceptant le mouvement : scènes plein écran pinnées (mobile compris). */
+  motion: '(prefers-reduced-motion: no-preference)',
   /** Accessibilité : aucune animation de scroll. */
   reduce: '(prefers-reduced-motion: reduce)',
 } as const;

@@ -196,7 +196,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <EvensiumLogo
               size={30}
-              decorative
               textColorClass="text-slate-900 group-hover:text-blue-600 font-bold transition-colors"
             />
           </button>
