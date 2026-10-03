@@ -1,0 +1,6 @@
+{
+  "name": "EVENSIUM — Trade Shows & Exhibitions",
+  "description": "Site officiel d'EVENSIUM, créateur de salons internationaux d'exception en Algérie (CHOCORIUM, MILKTEC, CLINICA). Expérience ultra-luxueuse Awwwards.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
