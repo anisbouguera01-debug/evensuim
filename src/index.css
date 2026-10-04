@@ -1,0 +1,850 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --evensium-navy: #1B365D;
+    --evensium-navy-dark: #0D1B2A;
+    --evensium-steel: #7090B5;
+    --evensium-mint: #10B981;
+    --evensium-purple: #8B5CF6;
+    --evensium-cyan: #06B6D4;
+    --evensium-gold: #D97706;
+    --evensium-charcoal: #0F172A;
+    
+    /* Stripe / Linear / Framer / Apple Luminous Light Tokens */
+    --bg-luminous: #F8FAFC;
+    --card-luminous: #FFFFFF;
+    --border-luminous: #E2E8F0;
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+  }
+
+  body {
+    background-color: #F8FAFC;
+    color: #0F172A;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Infinite Marquee Ticker Keyframes for Awwwards Gallery */
+@keyframes awwwardsMarquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes awwwardsMarqueeReverse {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+.animate-awwwards-marquee {
+  animation: awwwardsMarquee 90s linear infinite;
+  will-change: transform;
+}
+
+.animate-awwwards-marquee-reverse {
+  animation: awwwardsMarqueeReverse 90s linear infinite;
+  will-change: transform;
+}
+
+/* Pro Luminous Light Beams & Ray Animations */
+@keyframes lightRaySweep {
+  0% {
+    transform: rotate(-12deg) translateX(-100%);
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: rotate(-12deg) translateX(100%);
+    opacity: 0.3;
+  }
+}
+
+@keyframes beamPulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scaleX(0.85);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scaleX(1.15);
+  }
+}
+
+@keyframes shimmerSweep {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-ray-sweep {
+  animation: lightRaySweep 8s ease-in-out infinite alternate;
+}
+
+.animate-beam-pulse {
+  animation: beamPulse 4s ease-in-out infinite;
+}
+
+.animate-shimmer-text {
+  background-size: 200% auto;
+  animation: shimmerSweep 4s linear infinite;
+}
+
+/* Dynamic Text Glow Shadows for Hero Themes */
+.glow-chocolat {
+  filter: drop-shadow(0 0 25px rgba(180, 83, 9, 0.45));
+}
+
+.glow-lait {
+  filter: drop-shadow(0 0 25px rgba(37, 99, 235, 0.45));
+}
+
+.glow-cafe {
+  filter: drop-shadow(0 0 25px rgba(217, 119, 6, 0.45));
+}
+
+.glow-yaourt {
+  filter: drop-shadow(0 0 25px rgba(219, 39, 119, 0.45));
+}
+
+.glow-gourmandise {
+  filter: drop-shadow(0 0 25px rgba(147, 51, 234, 0.45));
+}
+
+.glow-biscuit {
+  filter: drop-shadow(0 0 25px rgba(234, 88, 12, 0.45));
+}
+
+/* Evensium Logo Wordmark Styling */
+.evensium-wordmark {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  text-transform: lowercase;
+}
+
+/* Apple & Stripe Style Link Buttons */
+.apple-link {
+  color: #2563EB;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.apple-link:hover {
+  text-decoration: underline;
+  opacity: 0.9;
+  transform: translateX(2px);
+}
+
+.apple-link-mint {
+  color: #059669;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.apple-link-mint:hover {
+  text-decoration: underline;
+  opacity: 0.9;
+  transform: translateX(2px);
+}
+
+/* Luminous Glass Cards (Stripe / Framer / Apple Style) */
+.apple-card-dark {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 28px;
+  color: #0F172A;
+  box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.05);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-card-dark:hover {
+  transform: translateY(-4px) scale(1.01);
+  border-color: #CBD5E1;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.12), 0 0 25px rgba(37, 99, 235, 0.08);
+}
+
+.apple-card-light {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 28px;
+  color: #0F172A;
+  box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.05);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-card-light:hover {
+  transform: translateY(-4px) scale(1.01);
+  border-color: #CBD5E1;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.12);
+}
+
+/* Evensium Brand Logo Icon */
+.evensium-logo-x {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Bento Grid Design Theme Utilities */
+.glass-bento {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 28px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-bento:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.12), 0 0 25px rgba(99, 102, 241, 0.1);
+}
+
+.glass-navy {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(241, 245, 249, 0.95));
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 28px;
+}
+
+.glass-mint {
+  background: linear-gradient(135deg, rgba(236, 253, 245, 0.8), rgba(255, 255, 255, 0.95));
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(167, 243, 208, 0.8);
+  border-radius: 28px;
+}
+
+.glass-purple {
+  background: linear-gradient(135deg, rgba(245, 243, 255, 0.8), rgba(255, 255, 255, 0.95));
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(221, 214, 254, 0.8);
+  border-radius: 28px;
+}
+
+.badge-bento {
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  padding: 4px 14px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #0F172A;
+}
+
+.badge-mint {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  color: #047857;
+}
+
+.badge-navy {
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1D4ED8;
+}
+
+.badge-purple {
+  background: #F5F3FF;
+  border: 1px solid #DDD6FE;
+  color: #6D28D9;
+}
+
+.badge-gold {
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  color: #B45309;
+}
+
+.btn-evensium-mint {
+  background-color: #10B981;
+  color: #FFFFFF;
+  padding: 10px 24px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  transition: all 0.3s ease;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.btn-evensium-mint:hover {
+  background-color: #059669;
+  box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.4);
+}
+
+.btn-bento-primary {
+  background-color: #0F172A;
+  color: #FFFFFF;
+  padding: 10px 24px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  transition: all 0.3s ease;
+}
+
+.btn-bento-primary:hover {
+  background-color: #2563EB;
+  color: #FFFFFF;
+  box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+}
+
+.btn-bento-outline-mint {
+  background: transparent;
+  border: 1px solid #10B981;
+  color: #047857;
+  padding: 8px 20px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-bento-outline-mint:hover {
+  background: #10B981;
+  color: #FFFFFF;
+}
+
+.btn-bento-outline-blue {
+  background: transparent;
+  border: 1px solid #2563EB;
+  color: #1D4ED8;
+  padding: 8px 20px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-bento-outline-blue:hover {
+  background: #2563EB;
+  color: #ffffff;
+}
+
+/* =====================================================================
+   EXPÉRIENCE CINÉMATIQUE — couche motion (GSAP / Lenis)
+   ===================================================================== */
+
+/* Lenis (smooth scroll) */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+html.scroll-locked,
+html.scroll-locked body {
+  overflow: hidden;
+}
+
+/* Lien d'évitement (clavier) */
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: #0f172a;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  transform: translateY(-160%);
+  transition: transform 0.25s ease;
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+/* Focus visible cohérent sur tout le site */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid #0284c7;
+  outline-offset: 3px;
+  border-radius: 10px;
+}
+
+/* SplitText : les lignes masquées gardent l'interlignage d'origine */
+.split-line {
+  padding-bottom: 0.06em;
+  margin-bottom: -0.06em;
+}
+
+/* Barre de progression — dégradé des 4 couleurs du logo */
+.scroll-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 2px;
+  z-index: 60;
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, #81548e, #0c63ad 40%, #3d9771 75%, #1a1a1a);
+  pointer-events: none;
+}
+
+/* Transition de page */
+.page-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  visibility: hidden;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Header : transitions douces (le déplacement vertical est piloté en JS via transform) */
+.site-header {
+  transition: background-color 0.45s ease, border-color 0.45s ease, padding 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.45s ease, backdrop-filter 0.45s ease;
+  will-change: transform;
+}
+.header-logo {
+  transition: scale 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav-underline {
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav-link:hover .nav-underline,
+.nav-link:focus-visible .nav-underline {
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+.nav-underline.is-active {
+  transform: scaleX(1);
+}
+.nav-dropdown {
+  animation: dropdownIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes dropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Burger → croix */
+.burger .burger-line {
+  position: absolute;
+  left: 50%;
+  width: 20px;
+  height: 2px;
+  margin-left: -10px;
+  border-radius: 2px;
+  background: #1e293b;
+  transition: transform 0.45s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.3s ease, width 0.3s ease;
+}
+.burger .burger-line:nth-child(1) {
+  transform: translateY(-6px);
+}
+.burger .burger-line:nth-child(3) {
+  transform: translateY(6px);
+  width: 14px;
+}
+.burger.is-open .burger-line:nth-child(1) {
+  transform: rotate(45deg);
+}
+.burger.is-open .burger-line:nth-child(2) {
+  opacity: 0;
+  transform: translateX(8px);
+}
+.burger.is-open .burger-line:nth-child(3) {
+  transform: rotate(-45deg);
+  width: 20px;
+}
+.mobile-menu {
+  visibility: hidden;
+}
+
+/* Boutons : légère élévation + retour tactile rapide */
+.btn-cine {
+  transition: background-color 0.35s ease, color 0.35s ease, box-shadow 0.35s ease, translate 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    scale 0.15s ease;
+}
+.btn-cine:hover {
+  translate: 0 -2px;
+}
+.btn-cine:active {
+  scale: 0.97;
+  translate: 0 0;
+}
+
+/* Cartes services : élévation, balayage lumineux, icône qui pivote */
+.service-card {
+  position: relative;
+  transition: box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.5s ease, translate 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.service-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.65) 50%, transparent 65%);
+  translate: -120% 0;
+  transition: translate 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.service-card:hover {
+  translate: 0 -6px;
+  border-color: #7dd3fc;
+  box-shadow: 0 30px 60px -20px rgba(30, 58, 138, 0.25);
+}
+.service-card:hover::after {
+  translate: 120% 0;
+}
+.service-band {
+  transition: background-color 0.5s ease;
+}
+.service-card:hover .service-band {
+  background-color: rgba(2, 132, 199, 0.08);
+}
+.service-icon {
+  transition: rotate 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), translate 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.4s ease,
+    color 0.4s ease;
+}
+.service-card:hover .service-icon {
+  rotate: -8deg;
+  translate: 0 -4px;
+  background-color: #1e3a8a;
+  color: #fff;
+}
+.service-badge {
+  transition: translate 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.service-card:hover .service-badge {
+  translate: 4px 0;
+}
+.service-arrow {
+  transition: background-color 0.4s ease, color 0.4s ease, translate 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.service-card:hover .service-arrow {
+  background-color: #0284c7;
+  color: #fff;
+  translate: 4px 0;
+}
+
+/* Piliers */
+.pillar-card {
+  transition: box-shadow 0.5s ease, border-color 0.5s ease, background-color 0.5s ease;
+}
+.pillar-card:hover {
+  background-color: #fff;
+  border-color: #7dd3fc;
+  box-shadow: 0 25px 50px -20px rgba(30, 58, 138, 0.2);
+}
+.pillar-icon {
+  transition: scale 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), rotate 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.pillar-card:hover .pillar-icon {
+  scale: 1.15;
+  rotate: -6deg;
+}
+
+/* Cartes « Prochaines éditions » */
+.editions-track[data-pinned='true'] {
+  overflow: visible;
+  scroll-snap-type: none;
+}
+.edition-card {
+  transition: box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.5s ease;
+}
+.edition-card:hover {
+  border-color: #7dd3fc;
+  box-shadow: 0 30px 60px -24px rgba(30, 58, 138, 0.3);
+}
+.edition-card:has(.stretched-link:focus-visible) {
+  outline: 2px solid #0284c7;
+  outline-offset: 4px;
+}
+.stretched-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 28px;
+}
+.edition-img {
+  transition: scale 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.edition-card:hover .edition-img {
+  scale: 1.07;
+}
+.edition-veil {
+  background: linear-gradient(to top, rgba(15, 23, 42, 0.45), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.edition-card:hover .edition-veil {
+  opacity: 1;
+}
+.edition-cta {
+  opacity: 0;
+  translate: 0 10px;
+  transition: opacity 0.45s ease, translate 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.edition-card:hover .edition-cta {
+  opacity: 1;
+  translate: 0 0;
+}
+.edition-title {
+  transition: translate 0.45s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease;
+}
+.edition-card:hover .edition-title {
+  translate: 4px 0;
+}
+@media (hover: none) {
+  .edition-cta {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+/* Mot géant en contour (section Nos Salons) */
+.outline-word {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  text-align: center;
+  white-space: nowrap;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.04em;
+  line-height: 0.8;
+  font-size: clamp(7rem, 17vw, 17rem);
+  color: transparent;
+  -webkit-text-stroke-width: 1.5px;
+  will-change: transform;
+}
+
+/* Champs de formulaire premium */
+.field {
+  transition: border-color 0.3s ease, box-shadow 0.35s ease, background-color 0.3s ease;
+}
+.field:focus {
+  box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.14), 0 10px 24px -14px rgba(2, 132, 199, 0.45);
+}
+.field:user-invalid {
+  border-color: #f43f5e;
+  box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.12);
+}
+.field:user-valid:not(select) {
+  border-color: #34d399;
+}
+
+/* Wordmark final du footer */
+.footer-wordmark {
+  font-family: 'Quicksand', 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  text-transform: lowercase;
+  letter-spacing: -0.05em;
+  line-height: 0.8;
+  font-size: clamp(3rem, 15vw, 15rem);
+  white-space: nowrap;
+  color: #1d1d1f;
+  padding-bottom: 0.08em;
+}
+@media (max-width: 640px) {
+  .footer-finale-mark {
+    width: 52px;
+  }
+  .footer-finale-mark [data-logo-mark] {
+    width: 52px !important;
+    height: 52px !important;
+  }
+}
+
+/* Curseur desktop */
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 90;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(2, 132, 199, 0.55);
+  pointer-events: none;
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1), height 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.35s ease, border-color 0.35s ease, opacity 0.3s ease;
+}
+.cursor-ring.is-visible {
+  opacity: 1;
+}
+.cursor-ring.is-link {
+  width: 52px;
+  height: 52px;
+  background-color: rgba(2, 132, 199, 0.08);
+  border-color: rgba(2, 132, 199, 0.35);
+}
+.cursor-ring.is-view {
+  width: 84px;
+  height: 84px;
+  background-color: rgba(15, 23, 42, 0.85);
+  border-color: transparent;
+  backdrop-filter: blur(6px);
+}
+.cursor-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #fff;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.25s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cursor-ring.is-view .cursor-label {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* =====================================================================
+   SCÈNES PLEIN ÉCRAN (accueil) — déterministes
+   La section mesure (1 + L) écrans ; le plateau reste collé en haut (position: sticky).
+   Aucun pin JavaScript : la position de chaque scène ne dépend que du scroll.
+   ===================================================================== */
+.scene-stage {
+  height: 100svh;
+  /* Chaque plateau est isolé : un repaint ailleurs dans la page (bandeau animé, header…)
+     ne force jamais le re-rendu de la scène et de ses éléments agrandis. */
+  contain: paint;
+  isolation: isolate;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .scene {
+    height: calc(var(--scene-n, 1) * 100svh);
+  }
+  .scene-stage {
+    position: sticky;
+    top: 0;
+  }
+}
+@media (prefers-reduced-motion: no-preference) and (min-width: 1024px) {
+  .scene {
+    height: calc(var(--scene-w, 1) * 100svh);
+  }
+}
+.scene-panel {
+  backface-visibility: hidden;
+}
+.is-moving .animate-pulse,
+.is-moving .animate-bounce {
+  animation: none;
+}
+.panorama-track {
+  width: max-content;
+}
+
+/* Mouvement réduit : les plans s'empilent en sections lisibles, rien n'est caché */
+@media (prefers-reduced-motion: reduce) {
+  .scene-stage {
+    height: auto;
+    min-height: 0;
+  }
+  .scene-panel,
+  .scene-overlay {
+    position: relative !important;
+    inset: auto !important;
+    min-height: 100svh;
+    transform: none !important;
+    clip-path: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  .scene-overlay {
+    min-height: 0;
+    padding-block: 18svh 6svh;
+  }
+  .reduce-hide {
+    display: none !important;
+  }
+  .reduce-dark {
+    background: #0b1324 !important;
+  }
+  .panorama-track {
+    width: auto;
+    flex-direction: column;
+    align-items: stretch;
+    padding-block: 18svh 10svh;
+  }
+  .panel-shrink {
+    width: auto !important;
+    margin: 0 !important;
+  }
+}
+
+/* Accessibilité : mouvement réduit → aucune animation décorative */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2563EB;
+}
+
+
+
