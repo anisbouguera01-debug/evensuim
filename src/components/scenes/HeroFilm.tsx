@@ -1,9 +1,9 @@
 import React, { useRef } from 'react';
 import { Award, ArrowRight, ChevronRight, Sparkles } from 'lucide-react';
 import { EvensiumLogo } from '../EvensiumLogo';
-import { IMAGES } from '../../assets/images';
 import { gsap, SplitText, useGSAP, offsetWithin, prefersReducedMotion } from '../../animations/gsap';
-import { useScene } from '../../animations/useScene';
+import { useScene, sceneStyle } from '../../animations/useScene';
+import { CameraImage } from '../motion/CameraImage';
 
 interface Props {
   onScrollTo: (id: string) => void;
@@ -11,116 +11,133 @@ interface Props {
 
 const STATEMENT = "Nous transformons vos projets d'entreprise en expériences mémorables et immersives de grande envergure.";
 
+/** Partie fixe de la scène, en écrans de scroll. */
+const LEN = { wide: 3.4, narrow: 3.6 };
+
 /**
- * SCÈNE 1 — CAMERA PUSH (≈ 320 % de scroll, pinnée, mobile compris)
- *  0 → 1    plan large : la composition d'origine respire
- *  1 → 3.2  travelling avant vers la carte logo ; textes et formes passent hors champ
- *  3.2→5.4  la caméra traverse le symbole (logo entier, mis à l'échelle et tourné, jamais modifié) ;
- *           une photo d'événement s'ouvre depuis son centre et devient le décor
- *  5.4→7.6  typographie cinétique : EVENSIUM se dévoile lettre par lettre puis la caméra le traverse
- *  7.6→10   manifeste + CTA pendant que la photo continue son mouvement
+ * SCÈNE 1 — CAMERA PUSH (pas d'entrée : la scène est déjà à l'écran)
+ * Temps exprimés en écrans de scroll (t = 1 ⇔ 1 hauteur d'écran).
+ *  0.00–0.30  plan large : la composition respire
+ *  0.30–1.00  travelling avant : la carte logo vient au centre, textes et formes sortent du cadre
+ *  1.00–1.70  la caméra traverse le symbole (logo entier mis à l'échelle, jamais modifié) ;
+ *             la photo d'événement s'ouvre depuis le centre
+ *  1.70–2.60  typographie cinétique EVENSIUM, puis la caméra traverse le mot
+ *  2.60–3.40  manifeste + CTA, la caméra continue d'avancer dans la photo
  */
 export const HeroFilm: React.FC<Props> = ({ onScrollTo }) => {
   const root = useRef<HTMLElement>(null);
 
-  // Intro au chargement (hors scroll) : la composition se pose.
+  // Intro au chargement (temps réel, hors scroll) : n'anime que des éléments
+  // que la timeline de scroll ne touche jamais (*-inner, data-hero-intro, data-hero-card).
   useGSAP(
     () => {
       if (prefersReducedMotion()) return;
       const q = gsap.utils.selector(root);
       gsap
         .timeline({ defaults: { ease: 'expo.out' } })
-        .from(q('[data-shape-inner]'), { opacity: 0, scale: 0.7, xPercent: -30, duration: 1.6, stagger: 0.08 })
-        .from(q('[data-hero-card]'), { y: 70, scale: 0.9, opacity: 0, duration: 1.3 }, 0.15)
-        .from(q('[data-hero-intro]'), { y: 34, opacity: 0, duration: 1, ease: 'power3.out', stagger: 0.08 }, 0.3)
-        .from(q('[data-hero-float-inner]'), { y: 30, opacity: 0, scale: 0.9, duration: 1 }, 0.8);
+        .fromTo(q('[data-shape-inner]'), { opacity: 0, scale: 0.7, xPercent: -30 }, { opacity: 1, scale: 1, xPercent: 0, duration: 1.6, stagger: 0.08, clearProps: 'opacity,scale,transform' })
+        .fromTo(q('[data-hero-card]'), { yPercent: 12, scale: 0.9, opacity: 0 }, { yPercent: 0, scale: 1, opacity: 1, duration: 1.3, clearProps: 'all' }, 0.15)
+        .fromTo(q('[data-hero-intro]'), { yPercent: 40, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 1, ease: 'power3.out', stagger: 0.08, clearProps: 'all' }, 0.3)
+        .fromTo(q('[data-hero-float-inner]'), { yPercent: 30, opacity: 0, scale: 0.9 }, { yPercent: 0, opacity: 1, scale: 1, duration: 1, clearProps: 'all' }, 0.8);
     },
     { scope: root },
   );
 
-  useScene(root, ({ stage, q, wide, timeline }) => {
-    const compo = q('[data-compo]')[0];
-    const card = q('[data-hero-stage]')[0];
-    const word = SplitText.create(q('[data-kinetic-word]')[0], { type: 'words,chars', mask: 'chars' });
-    const manifesto = SplitText.create(q('[data-manifesto-text]')[0], { type: 'words' });
+  useScene(
+    root,
+    LEN,
+    ({ stage, q, wide, tl, ft, cut, cam }) => {
+      const camera = q('[data-compo]')[0];
+      const card = q('[data-hero-stage]')[0];
+      const word = SplitText.create(q('[data-kinetic-word]')[0], { type: 'words,chars', mask: 'chars' });
+      const manifesto = SplitText.create(q('[data-manifesto-text]')[0], { type: 'words', mask: 'words' });
 
-    // Point de la carte à amener au centre de l'écran (sans tenir compte des transforms).
-    const target = () => {
-      const box = offsetWithin(card, compo);
-      return { ox: box.x + box.width / 2, oy: box.y + box.height / 2 };
-    };
-    const vw = (n: number) => () => (window.innerWidth * n) / 100;
-    const vh = (n: number) => () => (stage.clientHeight * n) / 100;
+      // Centre de la carte dans la composition (offsets de layout, indépendants des transforms),
+      // recalculé à chaque refresh : la cible reste exacte quelle que soit la taille de la fenêtre.
+      const target = () => {
+        const b = offsetWithin(card, camera);
+        return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+      };
+      const origin = () => `${target().x}px ${target().y}px`;
+      const push = wide ? 1.55 : 1.35;
 
-    gsap.set(q('[data-photo]'), { clipPath: 'circle(0% at 50% 50%)' });
-    gsap.set(q('[data-kinetic]'), { autoAlpha: 0 });
-    gsap.set(q('[data-manifesto]'), { autoAlpha: 0 });
-
-    const tl = timeline(320);
-    tl
-      // PLAN LARGE — la scène respire
-      .to(compo, { scale: 1.03, duration: 1, transformOrigin: () => `${target().ox}px ${target().oy}px` }, 0)
-      .to(q('[data-scroll-cue]'), { autoAlpha: 0, y: 20, duration: 0.5 }, 0)
-
-      // TRAVELLING AVANT — la carte vient au centre, le cadre se resserre
-      .to(
-        compo,
+      // ---- CAMÉRA (composition) : deux plans enchaînés, valeurs explicites ----
+      ft(camera, { x: 0, y: 0, scale: 1, transformOrigin: origin }, { x: 0, y: 0, scale: 1.04, transformOrigin: origin, duration: 0.3 }, 0);
+      ft(
+        camera,
+        { x: 0, y: 0, scale: 1.04, transformOrigin: origin },
         {
-          x: () => stage.clientWidth / 2 - target().ox,
-          y: () => stage.clientHeight / 2 - target().oy,
-          scale: wide ? 1.55 : 1.35,
-          duration: 2.2,
+          x: () => stage.clientWidth / 2 - target().x,
+          y: () => stage.clientHeight / 2 - target().y,
+          scale: push,
+          transformOrigin: origin,
+          duration: 0.7,
           ease: 'power2.inOut',
         },
-        1,
-      )
-      .to(
+        0.3,
+      );
+      ft(q('[data-scroll-cue]'), { autoAlpha: 1, yPercent: 0 }, { autoAlpha: 0, yPercent: 40, duration: 0.15 }, 0);
+
+      // ---- CONTENU : sort du cadre (valeurs relatives à l'élément / à la fenêtre) ----
+      ft(
         q('[data-hero-item]'),
+        { xPercent: 0, yPercent: 0, opacity: 1, filter: 'blur(0px)' },
         wide
-          ? { x: vw(-30), opacity: 0, filter: 'blur(10px)', stagger: 0.12, duration: 1.3, ease: 'power2.in' }
-          : { y: vh(-45), opacity: 0, filter: 'blur(8px)', stagger: 0.08, duration: 1.3, ease: 'power2.in' },
-        1,
-      )
-      // Premier plan qui passe devant l'objectif, chaque forme à sa vitesse
-      .to(q('[data-shape="blue"]'), { x: vw(-40), y: vh(-35), scale: 1.6, rotate: 22, duration: 2.2, ease: 'power2.in' }, 1)
-      .to(q('[data-shape="mint"]'), { x: vw(-60), scale: 1.4, duration: 2, ease: 'power2.in' }, 1.2)
-      .to(q('[data-shape="purple"]'), { x: vw(-15), y: vh(60), scale: 1.7, rotate: -20, duration: 2.2, ease: 'power2.in' }, 1)
-      .to(q('[data-shape="mesh"]'), { scale: 2.2, opacity: 0, duration: 1.6 }, 1)
-      .to(q('[data-hero-float]'), { x: vw(45), y: vh(10), rotate: 18, opacity: 0, duration: 1.4, ease: 'power2.in' }, 1.1)
-      .to(q('[data-hero-caption]'), { y: 30, opacity: 0, duration: 0.8 }, 1.4)
-      .to(q('[data-hero-glow]'), { scale: 1.6, opacity: 0, duration: 1 }, 1.6)
-      .to(q('[data-hero-panel]'), { opacity: 0, scale: 1.08, duration: 0.8 }, 2.4)
+          ? { xPercent: -40, yPercent: 0, opacity: 0, filter: 'blur(10px)', stagger: 0.04, duration: 0.45, ease: 'power2.in' }
+          : { xPercent: 0, yPercent: -120, opacity: 0, filter: 'blur(8px)', stagger: 0.03, duration: 0.45, ease: 'power2.in' },
+        0.3,
+      );
 
-      // TRAVERSÉE DU SYMBOLE — le logo entier grossit et pivote, on passe au travers
-      .to(q('[data-hero-mark]'), { scale: 26, rotate: 90, duration: 2.2, ease: 'power3.in' }, 3.2)
-      .to(q('[data-photo]'), { clipPath: 'circle(80% at 50% 50%)', duration: 1.4, ease: 'power2.inOut' }, 3.9)
-      .fromTo(q('[data-photo-img]'), { scale: 1.7 }, { scale: 1.2, duration: 2, ease: 'power2.out' }, 3.9)
-      .set([compo, ...q('[data-shape]')], { autoAlpha: 0 }, 5.4)
+      // ---- PREMIER PLAN : chaque forme à sa vitesse (en % de sa propre taille) ----
+      ft(q('[data-shape="blue"]'), { xPercent: 0, yPercent: 0, scale: 1, rotate: 0 }, { xPercent: -70, yPercent: -60, scale: 1.6, rotate: 22, duration: 0.7, ease: 'power2.in' }, 0.3);
+      ft(q('[data-shape="mint"]'), { xPercent: 0, scale: 1 }, { xPercent: -120, scale: 1.4, duration: 0.6, ease: 'power2.in' }, 0.35);
+      ft(q('[data-shape="purple"]'), { xPercent: 0, yPercent: 0, scale: 1, rotate: 0 }, { xPercent: -30, yPercent: 110, scale: 1.7, rotate: -20, duration: 0.7, ease: 'power2.in' }, 0.3);
+      ft(q('[data-shape="mesh"]'), { scale: 1, opacity: 1 }, { scale: 2.2, opacity: 0, duration: 0.5 }, 0.3);
+      ft(q('[data-hero-float]'), { xPercent: 0, yPercent: 0, rotate: 0, opacity: 1 }, { xPercent: 160, yPercent: 60, rotate: 18, opacity: 0, duration: 0.45, ease: 'power2.in' }, 0.32);
+      ft(q('[data-hero-caption]'), { yPercent: 0, opacity: 1 }, { yPercent: 60, opacity: 0, duration: 0.25 }, 0.4);
+      ft(q('[data-hero-glow]'), { scale: 1, opacity: 1 }, { scale: 1.6, opacity: 0, duration: 0.3 }, 0.5);
+      ft(q('[data-hero-panel]'), { scale: 1, opacity: 1 }, { scale: 1.08, opacity: 0, duration: 0.25 }, 0.75);
 
-      // TYPO CINÉTIQUE — EVENSIUM se dévoile puis la caméra le traverse
-      .to(q('[data-photo-shade]'), { opacity: 0.6, duration: 1.2 }, 5.2)
-      .set(q('[data-kinetic]'), { autoAlpha: 1 }, 5.3)
-      .from(word.chars, { yPercent: 120, rotate: 8, stagger: 0.06, duration: 0.7, ease: 'power3.out' }, 5.4)
-      .to(q('[data-kinetic-word]'), { scale: wide ? 9 : 7, opacity: 0, duration: 1.2, ease: 'power2.in' }, 6.6)
-      .to(q('[data-kinetic-label]'), { y: -40, opacity: 0, duration: 0.6 }, 6.6)
+      // ---- TRAVERSÉE DU SYMBOLE (le logo entier, comme un bloc) ----
+      // Agrandissement plafonné (×12) : au-delà, la couche à rasteriser devient énorme pour un gain visuel nul,
+      // la photo s'ouvre déjà par-dessus.
+      ft(q('[data-hero-mark]'), { scale: 1, rotate: 0 }, { scale: 12, rotate: 90, duration: 0.7, ease: 'power3.in' }, 1.0);
+      ft(q('[data-photo]'), { clipPath: 'circle(0% at 50% 50%)' }, { clipPath: 'circle(80% at 50% 50%)', duration: 0.45, ease: 'power2.inOut' }, 1.2);
+      cam(q('[data-photo] [data-cam]'), { scale: 1.6 }, { scale: 1.12 }, 1.2, 0.7, 'power2.out');
+      cam(q('[data-photo] [data-cam]'), { scale: 1.12 }, { scale: 1.38, panX: -0.6, panY: -0.4 }, 1.9, 1.5);
+      // (le halo « mesh » a déjà son opacité animée : il n'est pas repris ici, une seule source par propriété)
+      cut([camera, ...q('[data-shape="blue"], [data-shape="mint"], [data-shape="purple"]')], 1.7, false);
 
-      // La photo continue son mouvement (combiné : scale + x + y)
-      .to(q('[data-photo-img]'), { scale: 1.38, xPercent: -6, yPercent: -3, duration: 4.6 }, 5.4)
+      // ---- TYPO CINÉTIQUE ----
+      ft(q('[data-photo-shade]'), { opacity: 0 }, { opacity: 0.6, duration: 0.35 }, 1.65);
+      cut(q('[data-kinetic]'), 1.7);
+      ft(word.chars, { yPercent: 120, rotate: 8 }, { yPercent: 0, rotate: 0, stagger: 0.03, duration: 0.2, ease: 'power3.out' }, 1.75);
+      ft(q('[data-kinetic-word]'), { scale: 1, opacity: 1 }, { scale: wide ? 9 : 7, opacity: 0, duration: 0.4, ease: 'power2.in' }, 2.2);
+      ft(q('[data-kinetic-label]'), { yPercent: 0, opacity: 1 }, { yPercent: -150, opacity: 0, duration: 0.2 }, 2.2);
 
-      // MANIFESTE + CTA
-      .set(q('[data-manifesto]'), { autoAlpha: 1 }, 7.5)
-      .from(manifesto.words, { y: 70, opacity: 0, rotate: 3, stagger: 0.05, duration: 0.8, ease: 'power3.out' }, 7.6)
-      .from(q('[data-manifesto-cta]'), { y: 40, opacity: 0, stagger: 0.12, duration: 0.6, ease: 'power3.out' }, 8.6)
-      .to({}, { duration: 0.6 }, 9.4);
+      // ---- MANIFESTE + CTA ----
+      cut(q('[data-manifesto]'), 2.6);
+      ft(manifesto.words, { yPercent: 100 }, { yPercent: 0, stagger: 0.015, duration: 0.2, ease: 'power3.out' }, 2.62);
+      ft(q('[data-manifesto-cta]'), { yPercent: 60, opacity: 0 }, { yPercent: 0, opacity: 1, stagger: 0.06, duration: 0.2, ease: 'power3.out' }, 3.0);
 
-    return () => {
-      word.revert();
-      manifesto.revert();
-    };
-  });
+      // Dès que la caméra avance, les animations CSS infinies (halo, indicateur de scroll), déjà
+      // invisibles, sont coupées : sinon elles forcent un repaint permanent derrière le logo agrandi.
+      const quiet = () => stage.classList.toggle('is-moving', tl.time() > 0.25);
+      tl.eventCallback('onUpdate', quiet);
+      quiet();
+
+      return () => {
+        tl.eventCallback('onUpdate', null);
+        stage.classList.remove('is-moving');
+        word.revert();
+        manifesto.revert();
+      };
+    },
+    { entry: false },
+  );
 
   return (
-    <section ref={root} aria-labelledby="hero-title" className="scene relative">
+    <section ref={root} aria-labelledby="hero-title" className="scene relative" style={sceneStyle(LEN)}>
       <h1 id="hero-title" className="sr-only">
         Evensium — gestion d'événements professionnels et salons en Algérie
       </h1>
@@ -128,25 +145,19 @@ export const HeroFilm: React.FC<Props> = ({ onScrollTo }) => {
       <div className="scene-stage relative overflow-hidden bg-gradient-to-tr from-[#f0f9ff] via-[#e0f2fe] to-white">
         {/* COUCHE 1 — photo d'événement (ouverte depuis le centre du logo) */}
         <div data-photo className="reduce-hide absolute inset-0 z-[1] overflow-hidden bg-[#0f172a]" aria-hidden="true">
-          <img
-            data-photo-img
-            src={IMAGES.evensiumHeroBg}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover will-change-transform"
-            decoding="async"
-          />
+          <CameraImage image="evensiumHeroBg" eager />
           <div data-photo-shade className="absolute inset-0 bg-gradient-to-t from-[#0b1324] via-[#0b1324]/55 to-[#0b1324]/20 opacity-0" />
         </div>
 
         {/* COUCHE 2 — formes de premier plan (bleu nuit, bleu ciel, violet) */}
         <div className="absolute inset-0 z-[2] pointer-events-none" aria-hidden="true">
-          <div data-shape="blue" className="absolute -top-32 -left-40 will-change-transform">
+          <div data-shape="blue" className="absolute -top-32 -left-40">
             <div data-shape-inner className="w-[420px] h-[420px] sm:w-[600px] sm:h-[600px] bg-[#1e3a8a] rounded-[80px] sm:rounded-[120px] rotate-[32deg] opacity-[0.85] shadow-xl" />
           </div>
-          <div data-shape="mint" className="absolute top-[48%] -left-36 will-change-transform">
+          <div data-shape="mint" className="absolute top-[48%] -left-36">
             <div data-shape-inner className="w-[280px] h-[280px] sm:w-[400px] sm:h-[400px] bg-[#bae6fd] rounded-[60px] sm:rounded-[90px] rotate-[35deg] opacity-[0.95] shadow-lg" />
           </div>
-          <div data-shape="purple" className="absolute -bottom-36 -left-12 will-change-transform">
+          <div data-shape="purple" className="absolute -bottom-36 -left-12">
             <div data-shape-inner className="w-[300px] h-[300px] sm:w-[450px] sm:h-[450px] bg-gradient-to-tr from-[#a78bfa] to-[#7c3aed] rounded-[70px] sm:rounded-[100px] rotate-[38deg] opacity-[0.85] shadow-lg" />
           </div>
           <div data-shape="mesh" className="absolute top-10 right-0">
@@ -155,7 +166,7 @@ export const HeroFilm: React.FC<Props> = ({ onScrollTo }) => {
         </div>
 
         {/* COUCHE 3 — composition d'origine (plan large) */}
-        <div data-compo className="relative z-[3] min-h-[100svh] flex items-center px-6 pt-24 pb-10 lg:pt-28 will-change-transform">
+        <div data-compo className="relative z-[3] h-full flex items-center px-6 pt-24 pb-10 lg:pt-28">
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-center w-full">
             {/* Carte symbole : la cible de la caméra */}
             <div className="lg:col-span-5 relative">
@@ -168,7 +179,7 @@ export const HeroFilm: React.FC<Props> = ({ onScrollTo }) => {
                   <div className="relative p-6 lg:p-12 flex flex-col items-center justify-center h-full w-full">
                     {/* Le logo d'origine, déplacé comme un bloc par la caméra */}
                     <div className="my-auto scale-[0.55] lg:scale-100">
-                      <div data-hero-mark className="will-change-transform">
+                      <div data-hero-mark>
                         <EvensiumLogo size={180} showText={false} className="mx-auto filter drop-shadow-xl" />
                       </div>
                     </div>
@@ -251,7 +262,7 @@ export const HeroFilm: React.FC<Props> = ({ onScrollTo }) => {
           <span data-kinetic-label className="mb-4 text-[11px] font-mono font-bold uppercase tracking-[0.3em] text-sky-200">
             Salons • Congrès • Événements
           </span>
-          <div data-kinetic-word className="text-white font-black uppercase tracking-tighter leading-[0.85] text-[19vw] lg:text-[16vw] will-change-transform">
+          <div data-kinetic-word className="text-white font-black uppercase tracking-tighter leading-[0.85] text-[19vw] lg:text-[16vw]">
             Evensium
           </div>
         </div>

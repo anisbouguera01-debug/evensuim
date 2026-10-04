@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { CheckCircle2, Layers, Users } from 'lucide-react';
-import { gsap, SplitText } from '../../animations/gsap';
-import { useScene } from '../../animations/useScene';
+import { SplitText } from '../../animations/gsap';
+import { useScene, sceneStyle } from '../../animations/useScene';
 import { countTween } from '../motion/StatsCounter';
 
 const PILLARS = [
@@ -45,51 +45,47 @@ const FIGURES = [
  *  2. Chaque pilier = un mot géant qui traverse l'écran (marquee piloté par le scroll) + sa carte
  *  3. Les chiffres clés s'empilent et défilent comme un générique
  */
+const LEN = { wide: 5.6, narrow: 5.6 };
+
 export const WhyKinetic: React.FC = () => {
   const root = useRef<HTMLElement>(null);
 
-  useScene(root, ({ q, wide, timeline, enter }) => {
+  useScene(root, LEN, ({ q, wide, tl, T0, ft, cut }) => {
     const a = SplitText.create(q('[data-why-a]')[0], { type: 'words,chars', mask: 'chars' });
     const b = SplitText.create(q('[data-why-b]')[0], { type: 'words,chars', mask: 'chars' });
     const pillars = q('[data-pillar]');
     const figures = q('[data-figure]');
-    const W = () => window.innerWidth;
 
-    gsap.set(pillars, { autoAlpha: 0 });
-    gsap.set(figures, { autoAlpha: 0 });
+    // ---- 1. ENTRÉE : le titre se construit ----
+    ft(a.chars, { yPercent: 115 }, { yPercent: 0, stagger: 0.015, duration: 0.3, ease: 'power3.out' }, 0.2);
+    ft(b.chars, { yPercent: -115 }, { yPercent: 0, stagger: 0.02, duration: 0.3, ease: 'power3.out' }, 0.35);
+    // … puis se scinde : une ligne file hors champ, l'autre explose vers la caméra
+    ft(q('[data-why-a]'), { xPercent: 0 }, { xPercent: -160, duration: 0.45, ease: 'power2.in' }, T0 + 0.2);
+    ft(q('[data-why-label]'), { yPercent: 0, opacity: 1 }, { yPercent: -150, opacity: 0, duration: 0.2 }, T0 + 0.2);
+    ft(q('[data-why-sub]'), { yPercent: 0, opacity: 1 }, { yPercent: 60, opacity: 0, duration: 0.2 }, T0 + 0.2);
+    ft(q('[data-why-b]'), { scale: 1, opacity: 1 }, { scale: wide ? 7 : 6, opacity: 0, duration: 0.5, ease: 'power2.in' }, T0 + 0.25);
 
-    const tl = timeline(wide ? 420 : 480);
-
-    // 1 — le titre se construit puis se scinde
-    enter()
-      .from(a.chars, { yPercent: 115, stagger: 0.03, duration: 0.6, ease: 'power3.out' }, 0)
-      .from(b.chars, { yPercent: -115, stagger: 0.04, duration: 0.6, ease: 'power3.out' }, 0.2);
-    tl.to({}, { duration: 0.6 }, 0)
-      .to(q('[data-why-a]'), { x: () => -W() * 1.6, duration: 0.9, ease: 'power2.in' }, 1.1)
-      .to(q('[data-why-label]'), { y: -40, opacity: 0, duration: 0.4 }, 1.1)
-      .to(q('[data-why-b]'), { scale: wide ? 7 : 6, opacity: 0, duration: 1, ease: 'power2.in' }, 1.2)
-      .to(q('[data-why-sub]'), { y: 40, opacity: 0, duration: 0.4 }, 1.1);
-
-    // 2 — trois piliers, trois mots géants qui traversent le cadre
+    // ---- 2. PILIERS : un mot géant traverse le cadre, la carte entre puis ressort ----
     pillars.forEach((p, i) => {
-      const at = 2 + i * 1.6;
+      const at = T0 + 0.9 + i * 1.2;
       const dir = i % 2 ? -1 : 1;
-      tl.set(p, { autoAlpha: 1 }, at)
-        .fromTo(p.querySelector('[data-pillar-word]'), { x: () => dir * W() * 0.9 }, { x: () => -dir * W() * 0.9, duration: 1.8 }, at - 0.1)
-        .from(p.querySelector('[data-pillar-card]'), { y: 140, rotateX: -35, opacity: 0, duration: 0.6, ease: 'power3.out' }, at + 0.2)
-        .from(p.querySelector('[data-pillar-icon]'), { scale: 0, rotate: -180, duration: 0.5, ease: 'back.out(2)' }, at + 0.35)
-        .to(p.querySelector('[data-pillar-card]'), { y: -120, scale: 0.9, opacity: 0, duration: 0.5, ease: 'power2.in' }, at + 1.2)
-        .set(p, { autoAlpha: 0 }, at + 1.75);
+      const card = p.querySelector('[data-pillar-card]');
+      cut(p, at);
+      ft(p.querySelector('[data-pillar-word]'), { xPercent: dir * 90 }, { xPercent: -dir * 90, duration: 1.3 }, at - 0.05);
+      ft(card, { yPercent: 50, rotateX: -35, scale: 1, opacity: 0 }, { yPercent: 0, rotateX: 0, scale: 1, opacity: 1, duration: 0.35, ease: 'power3.out' }, at + 0.1);
+      ft(p.querySelector('[data-pillar-icon]'), { scale: 0, rotate: -180 }, { scale: 1, rotate: 0, duration: 0.3, ease: 'back.out(2)' }, at + 0.2);
+      ft(card, { yPercent: 0, rotateX: 0, scale: 1, opacity: 1 }, { yPercent: -40, rotateX: 0, scale: 0.9, opacity: 0, duration: 0.3, ease: 'power2.in' }, at + 0.85);
+      cut(p, at + 1.2, false);
     });
 
-    // 3 — générique des chiffres
-    const at = 2 + pillars.length * 1.6;
+    // ---- 3. GÉNÉRIQUE DES CHIFFRES ----
+    const at = T0 + 0.9 + pillars.length * 1.2;
+    ft(q('[data-figures-label]'), { xPercent: -30, opacity: 0 }, { xPercent: 0, opacity: 1, duration: 0.25 }, at);
     figures.forEach((f, i) => {
-      tl.fromTo(f, { autoAlpha: 0, yPercent: 120 }, { autoAlpha: 1, yPercent: 0, duration: 0.5, ease: 'power3.out' }, at + i * 0.35);
+      ft(f, { autoAlpha: 0, yPercent: 120 }, { autoAlpha: 1, yPercent: 0, duration: 0.3, ease: 'power3.out' }, at + i * 0.2);
       const n = f.querySelector<HTMLElement>('[data-count]');
-      if (n) tl.add(countTween(n, { duration: 0.9, ease: 'power2.out' }), at + i * 0.35);
+      if (n) tl.add(countTween(n, { duration: 0.5, ease: 'power2.out' }), at + i * 0.2);
     });
-    tl.from(q('[data-figures-label]'), { x: -50, opacity: 0, duration: 0.5 }, at).to({}, { duration: 1 });
 
     return () => {
       a.revert();
@@ -98,16 +94,16 @@ export const WhyKinetic: React.FC = () => {
   });
 
   return (
-    <section ref={root} id="why-us" aria-labelledby="why-title" className="scene relative">
+    <section ref={root} id="why-us" aria-labelledby="why-title" className="scene relative" style={sceneStyle(LEN)}>
       <div className="scene-stage relative overflow-hidden bg-white">
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#f0f9ff] rounded-tr-[240px] opacity-70 pointer-events-none" />
 
         {/* 1 — titre */}
         <div className="scene-overlay absolute inset-0 z-[2] flex flex-col items-center justify-center px-6 text-center">
           <span data-why-label className="block text-xs font-bold text-[#0284c7] uppercase tracking-widest font-mono mb-4">VALEURS • 03</span>
-          <h2 id="why-title" className="font-black uppercase tracking-tighter leading-[0.85] text-slate-900">
-            <span data-why-a className="block text-[10vw] lg:text-[6.5vw]">Pourquoi choisir</span>
-            <span data-why-b className="block text-[14vw] lg:text-[10vw] text-[#0284c7] will-change-transform">Evensium ?</span>
+          <h2 id="why-title" className="w-full font-black uppercase tracking-tighter leading-[0.85] text-slate-900">
+            <span data-why-a className="block w-full text-[10vw] lg:text-[6.5vw]">Pourquoi choisir</span>
+            <span data-why-b className="block text-[14vw] lg:text-[10vw] text-[#0284c7]">Evensium ?</span>
           </h2>
           <p data-why-sub className="mt-4 text-slate-500 text-sm max-w-md">
             Notre engagement s'appuie sur trois piliers fondamentaux pour garantir un succès sans faille.
@@ -117,13 +113,14 @@ export const WhyKinetic: React.FC = () => {
         {/* 2 — piliers */}
         {PILLARS.map(({ icon: Icon, word, title, text, footer, color }) => (
           <div key={title} data-pillar className="scene-panel absolute inset-0 z-[3] flex items-center justify-center px-6">
-            <div
-              data-pillar-word
-              aria-hidden="true"
-              className="reduce-hide absolute top-1/2 left-1/2 -translate-y-1/2 -ml-[50vw] w-[100vw] text-center whitespace-nowrap font-black uppercase tracking-tighter leading-none text-[34vw] lg:text-[22vw] will-change-transform"
-              style={{ color, opacity: 0.12 }}
-            >
-              {word}
+            <div className="reduce-hide absolute inset-0 flex items-center overflow-hidden pointer-events-none" aria-hidden="true">
+              <div
+                data-pillar-word
+                className="w-full shrink-0 text-center whitespace-nowrap font-black uppercase tracking-tighter leading-none text-[34vw] lg:text-[22vw]"
+                style={{ color, opacity: 0.12 }}
+              >
+                {word}
+              </div>
             </div>
             <article data-pillar-card className="pillar-card relative w-full max-w-md rounded-[32px] bg-white/90 backdrop-blur border border-sky-100 shadow-2xl p-8" style={{ perspective: '800px' }}>
               <div data-pillar-icon className="w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-5" style={{ background: color }}>

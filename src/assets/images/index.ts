@@ -21,3 +21,22 @@ export const IMAGES = {
   milktecHeroBg,
 } as const;
 
+export type ImageKey = keyof typeof IMAGES;
+
+/**
+ * Point de focus de chaque photo (sujet principal, 0 → 1), relevé sur l'image elle-même.
+ * Sert d'object-position ET d'origine des mouvements de caméra : le sujet reste
+ * dans la même zone visuelle quel que soit le format de l'écran.
+ */
+export const IMAGE_FOCUS: Record<ImageKey, { x: number; y: number }> = {
+  evensiumHeroBg: { x: 0.5, y: 0.45 }, // point de fuite de l'allée
+  clinicaHeroBg: { x: 0.5, y: 0.55 }, // hologramme central et visiteurs
+  chocoriumHeroBg: { x: 0.52, y: 0.3 }, // sculpture de cabosse
+  milktecHeroBg: { x: 0.5, y: 0.32 }, // gerbe de lait
+  chocoriumInauguration: { x: 0.52, y: 0.45 }, // coupure du ruban
+  chocoriumPalmaryStand: { x: 0.6, y: 0.45 }, // échange au comptoir
+  chocoriumTartinellaTasting: { x: 0.5, y: 0.5 }, // dégustation
+  chocoriumMillottiCoffee: { x: 0.55, y: 0.5 }, // baristas
+  chocorium2026Poster: { x: 0.62, y: 0.55 }, // carte en chocolat
+};
+

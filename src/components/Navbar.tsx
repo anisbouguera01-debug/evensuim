@@ -136,7 +136,8 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 overflow-hidden mx-auto sm:mx-0">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase bg-sky-500/20 text-sky-300 border border-sky-500/40 shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
+              {/* Animé seulement en haut de page : hors champ, ce repaint permanent coûterait cher aux scènes. */}
+              <span className={`w-1.5 h-1.5 rounded-full bg-sky-400 ${scrolled ? "" : "animate-pulse"}`} />
               Information
             </span>
             <p className="text-slate-300 truncate font-medium text-xs">

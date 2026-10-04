@@ -1,8 +1,9 @@
 import React, { useRef } from 'react';
 import { Briefcase, Calendar, Heart, MessageSquare, Users, Video } from 'lucide-react';
-import { IMAGES } from '../../assets/images';
-import { gsap, SplitText } from '../../animations/gsap';
-import { useScene } from '../../animations/useScene';
+import type { ImageKey } from '../../assets/images';
+import { SplitText } from '../../animations/gsap';
+import { useScene, sceneStyle } from '../../animations/useScene';
+import { CameraImage } from '../motion/CameraImage';
 
 const SERVICES = [
   {
@@ -11,7 +12,7 @@ const SERVICES = [
     title: 'Salons et foires professionnelles',
     text: "Organisation complète de salons d'affaires. Gestion de l'espace, coordination des exposants et architecture commerciale de stands personnalisés.",
     footer: 'Conception & Logistique',
-    image: IMAGES.chocoriumPalmaryStand,
+    image: 'chocoriumPalmaryStand' as ImageKey,
   },
   {
     icon: Calendar,
@@ -19,7 +20,7 @@ const SERVICES = [
     title: 'Conférences et séminaires',
     text: "Planification de symposiums d'experts, séminaires scientifiques et forums corporatifs d'envergure internationale avec équipement technologique de pointe.",
     footer: 'Coordination Technique',
-    image: IMAGES.clinicaHeroBg,
+    image: 'clinicaHeroBg' as ImageKey,
   },
   {
     icon: Heart,
@@ -27,7 +28,7 @@ const SERVICES = [
     title: 'Dîners d’affaires et réceptions',
     text: "Coordination de banquets d'affaires, dîners de gala et réceptions VIP avec mise en valeur culinaire et scénographie lumineuse sur mesure.",
     footer: 'Expérience VIP',
-    image: IMAGES.chocoriumTartinellaTasting,
+    image: 'chocoriumTartinellaTasting' as ImageKey,
   },
   {
     icon: MessageSquare,
@@ -35,7 +36,7 @@ const SERVICES = [
     title: 'Conférences de presse',
     text: 'Lancements de produits et communications officielles. Gestion des relations presse, accueil des journalistes, et dossiers médias complets.',
     footer: 'Visibilité Média',
-    image: IMAGES.chocoriumInauguration,
+    image: 'chocoriumInauguration' as ImageKey,
   },
   {
     icon: Users,
@@ -43,7 +44,7 @@ const SERVICES = [
     title: 'Team building & événements internes',
     text: "Création d'activités sur mesure pour renforcer l'esprit d'équipe, célébrer les étapes clés de votre entreprise et motiver vos collaborateurs.",
     footer: 'Cohésion Corporate',
-    image: IMAGES.evensiumHeroBg,
+    image: 'evensiumHeroBg' as ImageKey,
   },
   {
     icon: Video,
@@ -51,7 +52,7 @@ const SERVICES = [
     title: 'Production audiovisuelle',
     text: "Captation vidéo de haute qualité, réalisation d'aftermovies, diffusion en direct (live streaming) et modélisation 3D de vos stands.",
     footer: "Multimédia d'Élite",
-    image: IMAGES.chocoriumMillottiCoffee,
+    image: 'chocoriumMillottiCoffee' as ImageKey,
   },
 ];
 
@@ -63,41 +64,53 @@ const SERVICES = [
  *  - le titre arrive mot par mot, le texte glisse, l'icône fait une rotation de 3/4
  *  - la photo dérive et zoome pendant toute la durée du plan
  */
+const LEN = { wide: 7.2, narrow: 7.2 };
+
 export const ServicesSequence: React.FC = () => {
   const root = useRef<HTMLElement>(null);
 
-  useScene(root, ({ q, wide, timeline, enter }) => {
+  useScene(root, LEN, ({ q, wide, T0, L, ft, cut, cam }) => {
     const shots = q('[data-service]');
     const head = SplitText.create(q('[data-services-title]')[0], { type: 'words,chars', mask: 'chars' });
     const titles = shots.map((s) => SplitText.create(s.querySelector<HTMLElement>('[data-service-title]')!, { type: 'words', mask: 'words' }));
-    const inShot = (i: number, sel: string) => shots[i].querySelectorAll<HTMLElement>(sel);
+    const inShot = (i: number, sel: string) => Array.from(shots[i].querySelectorAll<HTMLElement>(sel));
+    const END = T0 + L;
+    const STEP = 1.1;
+    const CLOSED = 'polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%)';
+    const OPEN = 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)';
 
-    gsap.set(shots, { autoAlpha: 0 });
-    gsap.set(q('[data-service-bg]'), { clipPath: 'polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%)' });
-
-    const tl = timeline(wide ? 560 : 640);
-
-    // Ouverture : « NOS SERVICES » gigantesque puis la caméra le traverse
-    enter().from(head.chars, { yPercent: 115, stagger: 0.04, duration: 0.7, ease: 'power3.out' }, 0);
-    tl.to(q('[data-services-head]'), { scale: wide ? 6 : 5, opacity: 0, duration: 1, ease: 'power2.in' }, 0.6);
+    // ---- ENTRÉE + traversée du titre ----
+    ft(head.chars, { yPercent: 115 }, { yPercent: 0, stagger: 0.02, duration: 0.35, ease: 'power3.out' }, 0.25);
+    ft(q('[data-services-head]'), { scale: 1, opacity: 1 }, { scale: wide ? 6 : 5, opacity: 0, duration: 0.5, ease: 'power2.in' }, T0 + 0.1);
 
     shots.forEach((_, i) => {
-      const at = 1.6 + i * 1.5;
-      tl.set(shots[i], { autoAlpha: 1, zIndex: 10 + i }, at)
-        .to(inShot(i, '[data-service-bg]'), { clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)', duration: 0.6, ease: 'power3.inOut' }, at)
-        .fromTo(inShot(i, '[data-service-img]'), { scale: 1.45, yPercent: 6 }, { scale: 1.15, yPercent: -4, xPercent: i % 2 ? 4 : -4, duration: 1.8 }, at)
-        .from(inShot(i, '[data-service-num]'), { yPercent: 100, rotateX: -90, duration: 0.5, ease: 'power3.out' }, at + 0.15)
-        .from(inShot(i, '[data-service-icon]'), { scale: 0, rotate: -270, duration: 0.7, ease: 'back.out(1.6)' }, at + 0.2)
-        .from(titles[i].words, { yPercent: 110, stagger: 0.06, duration: 0.5, ease: 'power3.out' }, at + 0.25)
-        .from(inShot(i, '[data-service-line]'), { x: wide ? 100 : 0, y: wide ? 0 : 40, opacity: 0, stagger: 0.08, duration: 0.5, ease: 'power3.out' }, at + 0.4);
+      const at = T0 + 0.5 + i * STEP;
+      cut(shots[i], at);
+      // Décor : wipe vertical (cadre) + mouvement de caméra continu (wrapper caméra)
+      ft(inShot(i, '[data-service-bg]'), { clipPath: CLOSED }, { clipPath: OPEN, duration: 0.4, ease: 'power3.inOut' }, at);
+      cam(
+        inShot(i, '[data-cam]'),
+        { scale: 1.45, panY: 0.7 },
+        { scale: 1.15, panX: i % 2 ? 0.5 : -0.5, panY: -0.6 },
+        at,
+        Math.min(1.5, END - at),
+      );
+      ft(inShot(i, '[data-service-num]'), { yPercent: 100, rotateX: -90 }, { yPercent: 0, rotateX: 0, duration: 0.3, ease: 'power3.out' }, at + 0.1);
+      ft(inShot(i, '[data-service-icon]'), { scale: 0, rotate: -270 }, { scale: 1, rotate: 0, duration: 0.4, ease: 'back.out(1.6)' }, at + 0.15);
+      ft(titles[i].words, { yPercent: 110 }, { yPercent: 0, stagger: 0.03, duration: 0.3, ease: 'power3.out' }, at + 0.2);
+      ft(
+        inShot(i, '[data-service-line]'),
+        wide ? { xPercent: 15, yPercent: 0, opacity: 0 } : { xPercent: 0, yPercent: 40, opacity: 0 },
+        { xPercent: 0, yPercent: 0, opacity: 1, stagger: 0.04, duration: 0.3, ease: 'power3.out' },
+        at + 0.3,
+      );
       if (i > 0) {
-        // Le plan précédent recule et s'assombrit sous le nouveau
-        tl.to(inShot(i - 1, '[data-service-fg]'), { y: -60, opacity: 0, duration: 0.45, ease: 'power2.in' }, at)
-          .to(inShot(i - 1, '[data-service-img]'), { scale: 1.05, filter: 'brightness(0.5)', duration: 0.6 }, at);
+        // Le plan précédent recule et s'assombrit sous le nouveau : contenu + voile, jamais l'image
+        ft(inShot(i - 1, '[data-service-fg]'), { yPercent: 0, opacity: 1 }, { yPercent: -10, opacity: 0, duration: 0.3, ease: 'power2.in' }, at);
+        ft(inShot(i - 1, '[data-service-dim]'), { opacity: 0 }, { opacity: 0.6, duration: 0.35 }, at);
       }
-      tl.to(q('[data-services-bar]'), { scaleX: (i + 1) / shots.length, duration: 0.5 }, at);
+      ft(q('[data-services-bar]'), { scaleX: i / shots.length }, { scaleX: (i + 1) / shots.length, duration: 0.3 }, at);
     });
-    tl.to({}, { duration: 0.8 });
 
     return () => {
       head.revert();
@@ -106,9 +119,9 @@ export const ServicesSequence: React.FC = () => {
   });
 
   return (
-    <section ref={root} id="services" aria-labelledby="services-title" className="scene relative">
+    <section ref={root} id="services" aria-labelledby="services-title" className="scene relative" style={sceneStyle(LEN)}>
       <div className="scene-stage relative overflow-hidden bg-[#0b1324] text-white">
-        <div data-services-head className="scene-overlay absolute inset-0 z-[2] flex flex-col items-center justify-center px-6 text-center will-change-transform">
+        <div data-services-head className="scene-overlay absolute inset-0 z-[2] flex flex-col items-center justify-center px-6 text-center">
           <span className="block text-xs font-bold text-sky-300 uppercase tracking-widest font-mono mb-3">COMPÉTENCES • 02</span>
           <h2 id="services-title" data-services-title className="text-[15vw] lg:text-[10vw] font-black uppercase tracking-tighter leading-[0.85]">
             Nos <span className="text-sky-400">Services</span>
@@ -117,10 +130,11 @@ export const ServicesSequence: React.FC = () => {
         </div>
 
         {SERVICES.map(({ icon: Icon, badge, title, text, footer, image }, i) => (
-          <article key={title} data-service className="scene-panel absolute inset-0">
+          <article key={title} data-service className="scene-panel absolute inset-0" style={{ zIndex: 10 + i }}>
             <div data-service-bg className="absolute inset-0 overflow-hidden">
-              <img data-service-img src={image} alt="" className="absolute inset-0 w-full h-full object-cover will-change-transform" decoding="async" />
+              <CameraImage image={image} />
               <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-[#0b1324] via-[#0b1324]/75 to-[#0b1324]/20" />
+              <div data-service-dim className="absolute inset-0 bg-[#0b1324] opacity-0" />
             </div>
             <div data-service-fg className="relative h-full flex items-end lg:items-center px-6 pb-[10svh] lg:pb-0">
               <div className="max-w-6xl mx-auto w-full grid lg:grid-cols-12 gap-6 items-end lg:items-center">

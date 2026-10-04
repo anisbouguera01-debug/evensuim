@@ -35,8 +35,11 @@ export function countTween(el: HTMLElement, vars: gsap.TweenVars = {}) {
     {
       v: parsed.target,
       ease: 'power2.out',
+      immediateRender: false,
+      lazy: false,
       onUpdate: render,
       onStart: render,
+      onReverseComplete: render,
       ...vars,
     },
   );

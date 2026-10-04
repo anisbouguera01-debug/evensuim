@@ -1,17 +1,18 @@
 import React, { useRef } from 'react';
 import { MapPin } from 'lucide-react';
-import { IMAGES } from '../../assets/images';
+import type { ImageKey } from '../../assets/images';
 import { SALONS_DATA } from '../../data/mockData';
 import { StatValue, countTween } from '../motion/StatsCounter';
-import { gsap, SplitText } from '../../animations/gsap';
-import { useScene } from '../../animations/useScene';
+import { SplitText } from '../../animations/gsap';
+import { useScene, sceneStyle } from '../../animations/useScene';
+import { CameraImage } from '../motion/CameraImage';
 
 type SalonId = 'clinica' | 'chocorium' | 'milktec';
 
 const SALONS: {
   id: SalonId;
   name: string;
-  image: string;
+  image: ImageKey;
   badge: string;
   kicker: string;
   description: string;
@@ -21,7 +22,7 @@ const SALONS: {
   {
     id: 'clinica',
     name: 'Clinica',
-    image: IMAGES.clinicaHeroBg,
+    image: 'clinicaHeroBg',
     badge: 'Santé & Médical',
     kicker: 'Édition Annuelle',
     description:
@@ -32,7 +33,7 @@ const SALONS: {
   {
     id: 'chocorium',
     name: 'Chocorium',
-    image: IMAGES.chocoriumHeroBg,
+    image: 'chocoriumHeroBg',
     badge: 'Cacao, Chocolat & Café',
     kicker: 'Édition de Prestige',
     description:
@@ -43,7 +44,7 @@ const SALONS: {
   {
     id: 'milktec',
     name: 'Milktec',
-    image: IMAGES.milktecHeroBg,
+    image: 'milktecHeroBg',
     badge: 'Filière Laitière & Elevage',
     kicker: 'Plateforme Technique B2B',
     description:
@@ -63,62 +64,67 @@ const statsFor = (id: SalonId) => (SALONS_DATA.find((s) => s.id === id)?.stats ?
  *  Cut 1     ZOOM-THROUGH : Clinica fonce vers la caméra et sort du cadre, Chocorium est derrière
  *  Cut 2     WHIP PAN : Milktec entre en coup de fouet depuis la droite, Chocorium est chassé
  */
+const LEN = { wide: 5.6, narrow: 5.8 };
+
 export const SalonsReel: React.FC = () => {
   const root = useRef<HTMLElement>(null);
 
-  useScene(root, ({ q, wide, timeline, enter }) => {
+  useScene(root, LEN, ({ q, wide, tl, T0, L, ft, cut, cam }) => {
     const panels = q('[data-salon]');
+    const cams = panels.map((p) => p.querySelector<HTMLElement>('[data-cam]')!);
     const intro = SplitText.create(q('[data-salons-title]')[0], { type: 'words,chars', mask: 'chars' });
     const titles = panels.map((p) => SplitText.create(p.querySelector<HTMLElement>('[data-salon-name]')!, { type: 'words,chars', mask: 'chars' }));
-    const part = (i: number, sel: string) => panels[i].querySelectorAll<HTMLElement>(sel);
+    const part = (i: number, sel: string) => Array.from(panels[i].querySelectorAll<HTMLElement>(sel));
+    const END = T0 + L;
+    const FULL = 'inset(0% 0% 0% 0% round 0px)';
+    const CARD = wide ? 'inset(24% 30% 16% 30% round 32px)' : 'inset(30% 10% 18% 10% round 28px)';
 
-    // État de départ : Clinica en carte, les autres hors scène
-    gsap.set(panels[0], { clipPath: wide ? 'inset(24% 30% 16% 30% round 32px)' : 'inset(30% 10% 18% 10% round 28px)', zIndex: 3 });
-    gsap.set(panels[1], { zIndex: 2, autoAlpha: 0 });
-    gsap.set(panels[2], { zIndex: 4, xPercent: 100, autoAlpha: 0 });
-    gsap.set(q('[data-salon-copy]'), { autoAlpha: 0 });
-
-    /** Plan d'un salon : texte cinétique + chiffres + dérive de l'image. */
-    const shot = (tl: gsap.core.Timeline, i: number, at: number) => {
-      tl.set(part(i, '[data-salon-copy]'), { autoAlpha: 1 }, at)
-        .from(part(i, '[data-salon-kicker]'), { x: -80, opacity: 0, duration: 0.5, ease: 'power3.out' }, at)
-        .from(titles[i].chars, { yPercent: 115, rotate: 6, stagger: 0.05, duration: 0.7, ease: 'power3.out' }, at + 0.1)
-        .from(part(i, '[data-salon-line]'), { y: 60, opacity: 0, stagger: 0.12, duration: 0.6, ease: 'power3.out' }, at + 0.4);
-      part(i, '[data-count]').forEach((el, k) => tl.add(countTween(el, { duration: 0.9, ease: 'power2.out' }), at + 0.6 + k * 0.1));
-      tl.to(part(i, '[data-salon-img]'), { scale: 1.32, xPercent: i % 2 ? 5 : -6, yPercent: -3, duration: 2.6 }, at)
-        // Le titre quitte le cadre en se réduisant, comme un plan qui recule
-        .to(part(i, '[data-salon-name]'), { scale: 0.85, x: -100, opacity: 0, duration: 0.6, ease: 'power2.in' }, at + 2)
-        .to(part(i, '[data-salon-line]'), { y: -50, opacity: 0, stagger: 0.05, duration: 0.5, ease: 'power2.in' }, at + 2);
+    /** Plan d'un salon : texte cinétique + chiffres. `out` = instant de sortie du texte (optionnel). */
+    const shot = (i: number, at: number, out?: number) => {
+      cut(part(i, '[data-salon-copy]'), at);
+      ft(part(i, '[data-salon-kicker]'), { xPercent: -30, opacity: 0 }, { xPercent: 0, opacity: 1, duration: 0.25, ease: 'power3.out' }, at);
+      ft(titles[i].chars, { yPercent: 115, rotate: 6 }, { yPercent: 0, rotate: 0, stagger: 0.025, duration: 0.3, ease: 'power3.out' }, at + 0.05);
+      ft(part(i, '[data-salon-line]'), { yPercent: 40, opacity: 0 }, { yPercent: 0, opacity: 1, stagger: 0.06, duration: 0.3, ease: 'power3.out' }, at + 0.2);
+      part(i, '[data-count]').forEach((el, k) => tl.add(countTween(el, { duration: 0.45, ease: 'power2.out' }), at + 0.3 + k * 0.05));
+      if (out !== undefined) {
+        // Le titre recule et sort du cadre (relatif à sa propre largeur)
+        ft(part(i, '[data-salon-name]'), { scale: 1, xPercent: 0, opacity: 1 }, { scale: 0.85, xPercent: -20, opacity: 0, duration: 0.3, ease: 'power2.in' }, out);
+        ft(part(i, '[data-salon-line]'), { yPercent: 0, opacity: 1 }, { yPercent: -30, opacity: 0, stagger: 0.03, duration: 0.25, ease: 'power2.in' }, out);
+      }
     };
 
-    const tl = timeline(wide ? 520 : 600);
+    // ---- ENTRÉE : titre + Clinica en carte qui monte ----
+    ft(intro.chars, { yPercent: 115 }, { yPercent: 0, stagger: 0.03, duration: 0.35, ease: 'power3.out' }, 0.25);
+    ft(panels[0], { yPercent: 25 }, { yPercent: 0, duration: 1, ease: 'power2.out' }, 0);
+    cam(cams[0], { scale: 1.5 }, { scale: 1.2 }, 0, T0 + 0.6, 'power2.out');
 
-    // INTRO (pendant l'entrée) + TAKEOVER
-    enter()
-      .from(intro.chars, { yPercent: 115, stagger: 0.05, duration: 0.8, ease: 'power3.out' }, 0)
-      .from(panels[0], { yPercent: 25, duration: 1, ease: 'power2.out' }, 0);
-    tl.fromTo(part(0, '[data-salon-img]'), { scale: 1.5 }, { scale: 1.12, duration: 1.8, ease: 'power2.out' }, 0)
-      .to(q('[data-salons-intro]'), { scale: 1.6, opacity: 0, duration: 0.9, ease: 'power2.in' }, 1)
-      .to(panels[0], { clipPath: 'inset(0% 0% 0% 0% round 0px)', duration: 1, ease: 'power3.inOut' }, 1)
-      .to(q('[data-salons-progress]'), { autoAlpha: 1, duration: 0.3 }, 1.6);
-    shot(tl, 0, 1.8);
+    // ---- TAKEOVER : la carte devient l'écran ----
+    ft(q('[data-salons-intro]'), { scale: 1, opacity: 1 }, { scale: 1.6, opacity: 0, duration: 0.45, ease: 'power2.in' }, T0);
+    ft(panels[0], { clipPath: CARD }, { clipPath: FULL, duration: 0.5, ease: 'power3.inOut' }, T0);
+    cut(q('[data-salons-progress]'), T0 + 0.5);
+    cam(cams[0], { scale: 1.2 }, { scale: 1.34, panX: -0.7, panY: -0.3 }, T0 + 0.6, 1.6);
+    shot(0, T0 + 0.7, T0 + 1.75);
 
-    // CUT 1 — ZOOM-THROUGH
-    tl.set(panels[1], { autoAlpha: 1 }, 4.4)
-      .fromTo(part(1, '[data-salon-img]'), { scale: 1.45 }, { scale: 1.12, duration: 1.2, ease: 'power2.out' }, 4.4)
-      .to(panels[0], { scale: 2.4, opacity: 0, duration: 1, ease: 'power3.in' }, 4.4)
-      .to(q('[data-salons-digits]'), { yPercent: -100 / 3, duration: 0.5, ease: 'power2.inOut' }, 4.8);
-    shot(tl, 1, 5.3);
+    // ---- CUT 1 — ZOOM-THROUGH : Clinica fonce vers la caméra, Chocorium est derrière ----
+    const c1 = T0 + 2.2;
+    cut(panels[1], c1);
+    ft(panels[0], { scale: 1, opacity: 1 }, { scale: 2.4, opacity: 0, duration: 0.5, ease: 'power3.in' }, c1);
+    cam(cams[1], { scale: 1.45 }, { scale: 1.12 }, c1, 0.7, 'power2.out');
+    cam(cams[1], { scale: 1.12 }, { scale: 1.3, panX: 0.6, panY: -0.3 }, c1 + 0.7, 1.5);
+    ft(q('[data-salons-digits]'), { yPercent: 0 }, { yPercent: -100 / 3, duration: 0.25, ease: 'power2.inOut' }, c1 + 0.2);
+    shot(1, c1 + 0.55, c1 + 1.6);
 
-    // CUT 2 — WHIP PAN
-    tl.set(panels[2], { autoAlpha: 1 }, 7.9)
-      .to(panels[2], { xPercent: 0, duration: 0.8, ease: 'expo.inOut' }, 7.9)
-      .fromTo(panels[2], { skewX: -14 }, { skewX: 0, duration: 0.8, ease: 'expo.inOut' }, 7.9)
-      .fromTo(part(2, '[data-salon-img]'), { scale: 1.5 }, { scale: 1.12, duration: 1.3, ease: 'power2.out' }, 7.9)
-      .to(panels[1], { xPercent: -45, scale: 0.9, duration: 0.8, ease: 'expo.inOut' }, 7.9)
-      .to(q('[data-salons-digits]'), { yPercent: (-100 / 3) * 2, duration: 0.5, ease: 'power2.inOut' }, 8.2);
-    shot(tl, 2, 8.7);
-    tl.fromTo(q('[data-salons-line]'), { scaleY: 0 }, { scaleY: 1, duration: 9.5 }, 1.6).to({}, { duration: 0.3 }, 11.3);
+    // ---- CUT 2 — WHIP PAN : Milktec entre en coup de fouet ----
+    const c2 = c1 + 2.05;
+    cut(panels[2], c2);
+    ft(panels[2], { xPercent: 100, skewX: -14 }, { xPercent: 0, skewX: 0, duration: 0.45, ease: 'expo.inOut' }, c2);
+    ft(panels[1], { xPercent: 0, scale: 1 }, { xPercent: -45, scale: 0.9, duration: 0.45, ease: 'expo.inOut' }, c2);
+    cam(cams[2], { scale: 1.5 }, { scale: 1.12 }, c2, 0.7, 'power2.out');
+    cam(cams[2], { scale: 1.12 }, { scale: 1.25, panX: -0.5, panY: -0.2 }, c2 + 0.7, Math.max(0.1, END - (c2 + 0.7)));
+    ft(q('[data-salons-digits]'), { yPercent: -100 / 3 }, { yPercent: (-100 / 3) * 2, duration: 0.25, ease: 'power2.inOut' }, c2 + 0.15);
+    shot(2, c2 + 0.5);
+
+    ft(q('[data-salons-line]'), { scaleY: 0 }, { scaleY: 1, duration: END - (T0 + 0.5) }, T0 + 0.5);
 
     return () => {
       intro.revert();
@@ -127,7 +133,7 @@ export const SalonsReel: React.FC = () => {
   });
 
   return (
-    <section ref={root} id="salons" aria-labelledby="salons-title" className="scene relative">
+    <section ref={root} id="salons" aria-labelledby="salons-title" className="scene relative" style={sceneStyle(LEN)}>
       <div className="scene-stage relative overflow-hidden bg-[#0b1324] text-white">
         {/* Titre d'ouverture */}
         <div data-salons-intro className="scene-overlay absolute inset-x-0 top-[10svh] lg:top-[12svh] z-[6] text-center px-6 pointer-events-none">
@@ -138,15 +144,15 @@ export const SalonsReel: React.FC = () => {
           <p className="mt-3 text-slate-300 text-sm max-w-md mx-auto">Découvrez la diversité de nos expositions sectorielles de premier plan en Algérie.</p>
         </div>
 
-        {SALONS.map((s) => (
-          <article key={s.id} data-salon className="scene-panel absolute inset-0 overflow-hidden will-change-transform" aria-label={`Salon ${s.name}`}>
-            <img
-              data-salon-img
-              src={s.image}
-              alt={s.name}
-              className="absolute inset-0 w-full h-full object-cover will-change-transform"
-              decoding="async"
-            />
+        {SALONS.map((s, i) => (
+          <article
+            key={s.id}
+            data-salon
+            className="scene-panel absolute inset-0 overflow-hidden"
+            style={{ zIndex: [3, 2, 4][i] }}
+            aria-label={`Salon ${s.name}`}
+          >
+            <CameraImage image={s.image} alt={s.name} eager={i === 0} />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0b1324] via-[#0b1324]/55 to-[#0b1324]/10" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#0b1324]/70 to-transparent lg:block hidden" />
 
@@ -158,7 +164,7 @@ export const SalonsReel: React.FC = () => {
                     {s.kicker}
                     <span className="ml-2 px-2.5 py-0.5 rounded-full text-[9px] bg-white/15 text-white backdrop-blur">{s.badge}</span>
                   </div>
-                  <h3 data-salon-name className="text-[14.5vw] lg:text-[8.5vw] font-black uppercase tracking-tighter leading-[0.82] origin-left">
+                  <h3 data-salon-name className="text-[14.5vw] lg:text-[7vw] font-black uppercase tracking-tighter leading-[0.82] origin-left whitespace-nowrap">
                     {s.name}
                   </h3>
                   <p data-salon-line className="text-slate-200 text-sm sm:text-base lg:text-lg leading-relaxed">

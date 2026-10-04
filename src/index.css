@@ -744,14 +744,37 @@ html.scroll-locked body {
 }
 
 /* =====================================================================
-   SCÈNES PLEIN ÉCRAN (accueil) — une scène = une section pinnée de 100svh
+   SCÈNES PLEIN ÉCRAN (accueil) — déterministes
+   La section mesure (1 + L) écrans ; le plateau reste collé en haut (position: sticky).
+   Aucun pin JavaScript : la position de chaque scène ne dépend que du scroll.
    ===================================================================== */
 .scene-stage {
   height: 100svh;
-  min-height: 560px;
+  /* Chaque plateau est isolé : un repaint ailleurs dans la page (bandeau animé, header…)
+     ne force jamais le re-rendu de la scène et de ses éléments agrandis. */
+  contain: paint;
+  isolation: isolate;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .scene {
+    height: calc(var(--scene-n, 1) * 100svh);
+  }
+  .scene-stage {
+    position: sticky;
+    top: 0;
+  }
+}
+@media (prefers-reduced-motion: no-preference) and (min-width: 1024px) {
+  .scene {
+    height: calc(var(--scene-w, 1) * 100svh);
+  }
 }
 .scene-panel {
   backface-visibility: hidden;
+}
+.is-moving .animate-pulse,
+.is-moving .animate-bounce {
+  animation: none;
 }
 .panorama-track {
   width: max-content;
