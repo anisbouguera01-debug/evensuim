@@ -47,4 +47,18 @@ déplacé / mis à l'échelle / tourné comme un bloc ; sa forme, ses couleurs e
 Puis : formulaire de contact (rideau clip-path) et footer (le logo arrive en rotation, le wordmark s'écrit).
 
 Global : header verre, menu mobile plein écran, transitions de page aux 4 couleurs du logo, curseur
-(pointeur fin), barre de progression, Lenis sur desktop (tactile 100 % natif sur téléphone).
+(pointeur fin), barre de progression, scroll 100 % natif (aucun lissage ni inertie ajoutée) + snap par scènes (`sceneSnap.ts`).
+
+## Snap par scènes (`src/animations/sceneSnap.ts`)
+
+Un seul système de calage, sans interception de la molette. Chaque scène déclare ses **beats** (`beat(t)` dans `useScene`) :
+instants de timeline où le cadrage est final ; début (`T0`) et fin de scène sont toujours des beats. Les beats sont convertis
+en positions de scroll à partir du ScrollTrigger de la scène (donc cohérents avec le sticky, le resize et le chargement des images).
+
+- geste fini (aucun scroll depuis 140 ms, doigt levé) → la page se pose sur un beat ;
+- **un geste = une étape** : la cible est le beat voisin dans le sens du geste, même si l'inertie a emporté plusieurs écrans ;
+- ancres, flèches, barre de défilement, Début/Fin, recherche dans la page → beat le plus proche ;
+- toute nouvelle molette / touche / toucher interrompt le calage ; aucun calage sous le doigt ;
+- désactivé en `prefers-reduced-motion` et hors de l'accueil ; `window.__SNAP_OFF__ = true` le coupe (tests de déterminisme).
+
+Le snap décide **où** on s'arrête ; la timeline (progression = position de scroll) décide **comment** l'image se déroule.

@@ -1,6 +1,7 @@
 import type { CSSProperties, RefObject } from 'react';
 import { gsap, ScrollTrigger, useGSAP, MQ } from './gsap';
 import { Shot, focusOf, shotVars } from './camera';
+import { registerSceneStops } from './sceneSnap';
 
 /**
  * SCÈNE DÉTERMINISTE
@@ -40,6 +41,8 @@ export interface SceneContext {
   cut: (targets: gsap.TweenTarget, at: number, on?: boolean) => void;
   /** Mouvement de caméra borné autour du point de focus de l'image. */
   cam: (cams: Element | Element[], from: Shot, to: Shot, at: number, duration: number, ease?: string) => void;
+  /** Déclare des « beats » : instants (écrans) où le cadrage est final. Le snap s'y pose. */
+  beat: (...times: number[]) => void;
 }
 
 /**
@@ -136,7 +139,15 @@ export function useScene(
           });
         };
 
-        const cleanup = build({ stage, q, wide, tl, st, T0, L, ft, cut, cam });
+        // ---- Beats de snap : instants de timeline → positions de scroll (via le ScrollTrigger) ----
+        const beats: number[] = [];
+        const beat: SceneContext['beat'] = (...times) => beats.push(...times);
+        const cleanup = build({ stage, q, wide, tl, st, T0, L, ft, cut, cam, beat });
+        // Un beat trop proche de la fin n'a pas de sens (le calage final suffit) ; début et fin toujours présents.
+        const marks = Array.from(new Set([0, T0, ...beats.filter((t) => total - t >= 0.5 && t > T0), total]));
+        const unregister = registerSceneStops(root, () =>
+          marks.map((t) => st.start + (st.end - st.start) * (t / total)),
+        );
 
         // ---- Plans fixes : chaque propriété est définie explicitement à TOUT instant [0, total] ----
         // (avant son premier plan, entre deux plans, après le dernier). Le rendu à une position
@@ -173,6 +184,7 @@ export function useScene(
         return () => {
           // tl et st sont créés dans le contexte matchMedia : ils sont révertés (styles restaurés)
           // et supprimés automatiquement à la sortie du contexte (changement de breakpoint, démontage).
+          unregister();
           if (typeof cleanup === 'function') cleanup();
         };
       });

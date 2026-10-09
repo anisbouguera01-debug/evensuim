@@ -52,12 +52,11 @@ export const Footer: React.FC<FooterProps> = ({
       mm.add({ desktop: MQ.desktop, mobile: MQ.mobile }, (ctx) => {
         const d = ctx.conditions?.desktop ? 1 : 0.5;
         (q('[data-footer-block]') as HTMLElement[]).forEach((block) => {
-          gsap.from(block, {
-            y: 80 * d,
-            opacity: 0,
-            ease: 'power2.out',
-            scrollTrigger: { trigger: block, start: 'top 98%', end: 'top 70%', scrub: SCRUB },
-          });
+          gsap.fromTo(
+            block,
+            { yPercent: 12 * d, opacity: 0 },
+            { yPercent: 0, opacity: 1, ease: 'power2.out', scrollTrigger: { trigger: block, start: 'top 98%', end: 'top 70%', scrub: SCRUB } },
+          );
         });
 
         const finale = q('[data-footer-finale]')[0] as HTMLElement;
@@ -65,8 +64,8 @@ export const Footer: React.FC<FooterProps> = ({
         gsap
           .timeline({ scrollTrigger: { trigger: finale, start: 'top 95%', end: 'bottom bottom', scrub: SCRUB } })
           // Le logo d'origine arrive comme un bloc (rotation + échelle), jamais modifié
-          .from(q('[data-footer-mark]'), { scale: 0.2, rotate: -180, opacity: 0, ease: 'power3.out' }, 0)
-          .from(word.chars, { yPercent: 110, ease: 'power3.out', stagger: 0.06 }, 0.15);
+          .fromTo(q('[data-footer-mark]'), { scale: 0.2, rotate: -180, opacity: 0 }, { scale: 1, rotate: 0, opacity: 1, ease: 'power3.out' }, 0)
+          .fromTo(word.chars, { yPercent: 110 }, { yPercent: 0, ease: 'power3.out', stagger: 0.06 }, 0.15);
         return () => word.revert();
       });
       return () => mm.revert();

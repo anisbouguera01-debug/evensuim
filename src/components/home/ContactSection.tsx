@@ -54,18 +54,22 @@ export const ContactSection: React.FC = () => {
             scrollTrigger: { trigger: section, start: 'top bottom', end: 'top 25%', scrub: SCRUB },
           },
         );
-        gsap.from(q('[data-contact-card]'), {
-          x: desktop ? -80 : -40,
-          opacity: 0,
-          stagger: 0.12,
-          ease: 'power2.out',
-          scrollTrigger: { trigger: q('[data-contact-cards]')[0], start: 'top 92%', end: 'top 55%', scrub: SCRUB },
-        });
+        gsap.fromTo(
+          q('[data-contact-card]'),
+          { xPercent: desktop ? -15 : -10, opacity: 0 },
+          {
+            xPercent: 0,
+            opacity: 1,
+            stagger: 0.12,
+            ease: 'power2.out',
+            scrollTrigger: { trigger: q('[data-contact-cards]')[0], start: 'top 92%', end: 'top 55%', scrub: SCRUB },
+          },
+        );
         gsap.fromTo(
           q('[data-contact-form]'),
-          { y: desktop ? 120 : 60, rotateX: desktop ? 8 : 0, scale: 0.95, opacity: 0, transformPerspective: 1200, transformOrigin: '50% 100%' },
+          { yPercent: desktop ? 15 : 8, rotateX: desktop ? 8 : 0, scale: 0.95, opacity: 0, transformPerspective: 1200, transformOrigin: '50% 100%' },
           {
-            y: 0,
+            yPercent: 0,
             rotateX: 0,
             scale: 1,
             opacity: 1,

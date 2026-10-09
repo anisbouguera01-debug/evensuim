@@ -1,6 +1,7 @@
 import React from 'react';
 import { PageId } from '../types';
 import { useSmoothScroll } from '../animations/SmoothScroll';
+import { useSceneSnap } from '../animations/sceneSnap';
 import { HeroFilm } from '../components/scenes/HeroFilm';
 import { AboutPanorama } from '../components/scenes/AboutPanorama';
 import { SalonsReel } from '../components/scenes/SalonsReel';
@@ -24,6 +25,7 @@ interface HomeProps {
  */
 export const Home: React.FC<HomeProps> = ({ setCurrentPage }) => {
   const { scrollTo } = useSmoothScroll();
+  useSceneSnap();
   const scrollToSection = (id: string) => scrollTo(`#${id}`, { offset: id === 'contact' ? -72 : 0 });
 
   return (

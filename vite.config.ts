@@ -24,7 +24,7 @@ export default defineConfig(() => {
           // Bibliothèques isolées : mises en cache indépendamment du code du site.
           manualChunks: {
             react: ['react', 'react-dom'],
-            animation: ['gsap', '@gsap/react', 'lenis'],
+            animation: ['gsap', '@gsap/react'],
             motion: ['motion'],
           },
         },

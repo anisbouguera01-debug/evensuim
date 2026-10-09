@@ -114,7 +114,6 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ open, onClose, navLinks,
       aria-modal="true"
       aria-label="Menu principal"
       aria-hidden={!open}
-      data-lenis-prevent
       className="mobile-menu lg:hidden fixed inset-0 z-[35] bg-gradient-to-br from-white via-sky-50 to-[#e0f2fe] overflow-y-auto"
     >
       {/* Pilules du logo en décor */}

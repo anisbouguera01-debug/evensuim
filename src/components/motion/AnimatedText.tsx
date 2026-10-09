@@ -55,39 +55,34 @@ export function buildTextTween(
 ) {
   const scrollTrigger: ScrollTrigger.Vars = { trigger, start: range[0], end: range[1], scrub: SCRUB };
   const d = compact ? 0.6 : 1;
+  // Valeurs de départ ET d'arrivée explicites (fromTo) : l'état à une position de scroll donnée
+  // ne dépend jamais d'une valeur relue au moment de la création.
   switch (variant) {
     case 'mask':
-      return gsap.from(split.words, { yPercent: 110, rotate: 4 * d, ease: 'power2.out', stagger: 0.04, scrollTrigger });
+      return gsap.fromTo(split.words, { yPercent: 110, rotate: 4 * d }, { yPercent: 0, rotate: 0, ease: 'power2.out', stagger: 0.04, scrollTrigger });
     case 'chars':
-      return gsap.from(split.chars, { yPercent: 105, ease: 'power2.out', stagger: 0.02, scrollTrigger });
+      return gsap.fromTo(split.chars, { yPercent: 105 }, { yPercent: 0, ease: 'power2.out', stagger: 0.02, scrollTrigger });
     case 'blur':
-      return gsap.from(split.chars, {
-        opacity: 0,
-        y: 18 * d,
-        filter: 'blur(12px)',
-        ease: 'power1.out',
-        stagger: 0.015,
-        scrollTrigger,
-      });
+      return gsap.fromTo(
+        split.chars,
+        { opacity: 0, yPercent: 30 * d, filter: 'blur(12px)' },
+        { opacity: 1, yPercent: 0, filter: 'blur(0px)', ease: 'power1.out', stagger: 0.015, scrollTrigger },
+      );
     case 'highlight':
       return gsap.fromTo(split.words, { opacity: 0.15 }, { opacity: 1, ease: 'none', stagger: 0.1, scrollTrigger });
     case 'slide':
-      return gsap.from(split.words, {
-        x: (i: number) => (i % 2 === 0 ? -80 : 80) * d,
-        opacity: 0,
-        ease: 'power2.out',
-        stagger: 0.05,
-        scrollTrigger,
-      });
+      return gsap.fromTo(
+        split.words,
+        { xPercent: (i: number) => (i % 2 === 0 ? -40 : 40) * d, opacity: 0 },
+        { xPercent: 0, opacity: 1, ease: 'power2.out', stagger: 0.05, scrollTrigger },
+      );
     case 'lines':
     default:
-      return gsap.from(split.lines.length ? split.lines : split.words, {
-        y: 30 * d,
-        opacity: 0,
-        ease: 'power2.out',
-        stagger: 0.08,
-        scrollTrigger,
-      });
+      return gsap.fromTo(
+        split.lines.length ? split.lines : split.words,
+        { yPercent: 40 * d, opacity: 0 },
+        { yPercent: 0, opacity: 1, ease: 'power2.out', stagger: 0.08, scrollTrigger },
+      );
   }
 }
 

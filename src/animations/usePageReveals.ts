@@ -21,13 +21,17 @@ export function usePageReveals(scope: RefObject<HTMLElement | null>, pageKey: st
 
         root.querySelectorAll<HTMLElement>('h1, h2').forEach((h) => {
           if (ownedByMotion(h) || h.closest('[data-no-reveal]')) return;
-          gsap.from(h, {
-            y: 60 * d,
-            opacity: 0,
-            filter: 'blur(8px)',
-            ease: 'power2.out',
-            scrollTrigger: { trigger: h, start: 'top 92%', end: 'top 62%', scrub: SCRUB },
-          });
+          gsap.fromTo(
+            h,
+            { yPercent: 40 * d, opacity: 0, filter: 'blur(8px)' },
+            {
+              yPercent: 0,
+              opacity: 1,
+              filter: 'blur(0px)',
+              ease: 'power2.out',
+              scrollTrigger: { trigger: h, start: 'top 92%', end: 'top 62%', scrub: SCRUB },
+            },
+          );
         });
 
         root.querySelectorAll<HTMLImageElement>('img').forEach((img) => {

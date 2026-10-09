@@ -16,7 +16,7 @@ const LEN = { wide: 3.2, narrow: 3.8 };
 export const AboutPanorama: React.FC = () => {
   const root = useRef<HTMLElement>(null);
 
-  useScene(root, LEN, ({ stage, q, T0, L, ft, cam }) => {
+  useScene(root, LEN, ({ stage, q, T0, L, ft, cam, beat }) => {
     const track = q('[data-track]')[0];
     // Distance réelle à parcourir (layout, sans transforms), recalculée à chaque refresh.
     const distance = () => Math.max(0, track.scrollWidth - stage.clientWidth);
@@ -44,6 +44,8 @@ export const AboutPanorama: React.FC = () => {
     ft(q('[data-about-body] > *'), { yPercent: 40, opacity: 0 }, { yPercent: 0, opacity: 1, stagger: 0.1, duration: 0.35, ease: 'power2.out' }, T0 + 1.6);
     ft(q('[data-about-card]'), { scale: 0.8, rotate: -6, opacity: 0 }, { scale: 1, rotate: 0, opacity: 1, duration: 0.5, ease: 'power3.out' }, Math.min(T0 + 2.3, END - 0.6));
     ft(q('[data-about-mark]'), { rotate: -45, scale: 0.6 }, { rotate: 0, scale: 1, duration: 0.5, ease: 'power3.out' }, Math.min(T0 + 2.35, END - 0.55));
+
+    beat(T0 + 1.7);
 
     return () => {
       title.revert();

@@ -34,8 +34,12 @@ export const prefersReducedMotion = () =>
 export const isFinePointer = () =>
   typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-/** Durée de lissage du scrub : donne l'inertie « caméra » sans décrocher du scroll. */
-export const SCRUB = 1;
+/**
+ * scrub: true — l'animation suit la position du scroll sans aucun retard.
+ * (Une valeur numérique ajoutait un rattrapage dans le temps : plus le geste était rapide,
+ * plus l'image affichée était en retard sur la position réelle.)
+ */
+export const SCRUB = true;
 
 /**
  * Position d'un élément relativement à un ancêtre, sans tenir compte des transforms

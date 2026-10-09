@@ -50,7 +50,7 @@ const LEN = { wide: 5.6, narrow: 5.6 };
 export const WhyKinetic: React.FC = () => {
   const root = useRef<HTMLElement>(null);
 
-  useScene(root, LEN, ({ q, wide, tl, T0, ft, cut }) => {
+  useScene(root, LEN, ({ q, wide, tl, T0, ft, cut, beat }) => {
     const a = SplitText.create(q('[data-why-a]')[0], { type: 'words,chars', mask: 'chars' });
     const b = SplitText.create(q('[data-why-b]')[0], { type: 'words,chars', mask: 'chars' });
     const pillars = q('[data-pillar]');
@@ -76,6 +76,7 @@ export const WhyKinetic: React.FC = () => {
       ft(p.querySelector('[data-pillar-icon]'), { scale: 0, rotate: -180 }, { scale: 1, rotate: 0, duration: 0.3, ease: 'back.out(2)' }, at + 0.2);
       ft(card, { yPercent: 0, rotateX: 0, scale: 1, opacity: 1 }, { yPercent: -40, rotateX: 0, scale: 0.9, opacity: 0, duration: 0.3, ease: 'power2.in' }, at + 0.85);
       cut(p, at + 1.2, false);
+      beat(at + 0.5);
     });
 
     // ---- 3. GÉNÉRIQUE DES CHIFFRES ----

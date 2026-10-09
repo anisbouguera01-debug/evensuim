@@ -62,7 +62,7 @@ export const EditionsTakeover: React.FC<Props> = ({ setCurrentPage }) => {
   const totalRef = useRef(0);
   const { scrollTo } = useSmoothScroll();
 
-  useScene(root, LEN, ({ q, wide, st, T0, L, ft, cut, cam }) => {
+  useScene(root, LEN, ({ q, wide, st, T0, L, ft, cut, cam, beat }) => {
     const cards = q('[data-edition]');
     const cams = cards.map((c) => c.querySelector<HTMLElement>('[data-cam]')!);
     const end = q('[data-edition-end]')[0];
@@ -121,6 +121,9 @@ export const EditionsTakeover: React.FC<Props> = ({ setCurrentPage }) => {
     ft(q('[data-edition-end-line]'), { yPercent: 50, opacity: 0 }, { yPercent: 0, opacity: 1, stagger: 0.06, duration: 0.3, ease: 'power3.out' }, fin + 0.3);
     labels.current.push(fin + 0.6);
 
+    // Beats = les lectures d'édition (le dernier label tombe sur la fin de scène, déjà un beat).
+    beat(...labels.current.slice(0, -1));
+
     stRef.current = st;
     totalRef.current = T0 + L;
     return () => {
@@ -134,7 +137,7 @@ export const EditionsTakeover: React.FC<Props> = ({ setCurrentPage }) => {
   const step = (dir: -1 | 1) => {
     const st = stRef.current;
     if (!st) {
-      document.getElementById('upcoming')?.scrollIntoView({ behavior: 'smooth' });
+      scrollTo('#upcoming');
       return;
     }
     const total = totalRef.current || 1;

@@ -69,7 +69,7 @@ const LEN = { wide: 7.2, narrow: 7.2 };
 export const ServicesSequence: React.FC = () => {
   const root = useRef<HTMLElement>(null);
 
-  useScene(root, LEN, ({ q, wide, T0, L, ft, cut, cam }) => {
+  useScene(root, LEN, ({ q, wide, T0, L, ft, cut, cam, beat }) => {
     const shots = q('[data-service]');
     const head = SplitText.create(q('[data-services-title]')[0], { type: 'words,chars', mask: 'chars' });
     const titles = shots.map((s) => SplitText.create(s.querySelector<HTMLElement>('[data-service-title]')!, { type: 'words', mask: 'words' }));
@@ -110,6 +110,7 @@ export const ServicesSequence: React.FC = () => {
         ft(inShot(i - 1, '[data-service-dim]'), { opacity: 0 }, { opacity: 0.6, duration: 0.35 }, at);
       }
       ft(q('[data-services-bar]'), { scaleX: i / shots.length }, { scaleX: (i + 1) / shots.length, duration: 0.3 }, at);
+      beat(at + 0.8);
     });
 
     return () => {

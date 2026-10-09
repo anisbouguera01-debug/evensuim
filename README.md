@@ -2,7 +2,7 @@
 
 Site vitrine React + TypeScript + Vite + Tailwind pour EVENSIUM (agence événementielle Algérie) et ses salons CHOCORIUM, MILKTEC et CLINICA.
 
-L'accueil est une **expérience cinématique pilotée par le scroll** (GSAP + ScrollTrigger + Lenis) : le scroll sert de timeline vidéo, chaque section a son propre langage d'animation. La chorégraphie complète est documentée dans [`docs/ANIMATION_TIMELINE.md`](docs/ANIMATION_TIMELINE.md).
+L'accueil est une **expérience cinématique pilotée par le scroll** (GSAP + ScrollTrigger) : le scroll sert de timeline vidéo, chaque section a son propre langage d'animation. La chorégraphie complète est documentée dans [`docs/ANIMATION_TIMELINE.md`](docs/ANIMATION_TIMELINE.md).
 
 ## Lancer en local
 
@@ -19,7 +19,7 @@ L'accueil est une **expérience cinématique pilotée par le scroll** (GSAP + Sc
 
 ```
 src/
-  animations/           GSAP (plugins, media queries), Lenis, révélations génériques
+  animations/           GSAP (plugins, media queries), scènes, snap par scènes, révélations génériques
   components/
     scenes/             Les 7 scènes plein écran de l'accueil (HeroFilm, AboutPanorama, SalonsReel,
                         EditionsTakeover, ServicesSequence, WhyKinetic, CtaZoom)
@@ -34,6 +34,6 @@ src/
 ## Principes
 
 - **Scrub partout** : les propriétés suivent la progression du scroll (avance, recule, s'arrête avec l'utilisateur).
-- **Scènes plein écran pinnées sur tous les écrans** (`useScene`) avec un cadrage propre au téléphone ; tactile natif (Lenis uniquement pour la molette).
+- **Scènes plein écran pinnées sur tous les écrans** (`useScene`) avec un cadrage propre au téléphone ; scroll natif partout (aucun lissage), snap par scènes sans interception de la molette.
 - **`prefers-reduced-motion`** : aucune animation de scroll, pas de smooth scroll, contenu entièrement visible.
 - Animations en `transform` / `opacity` / `clip-path` ; images en WebP (~85 % plus légères), pages et modales en code splitting.

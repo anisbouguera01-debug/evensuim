@@ -33,12 +33,19 @@ export const HeroFilm: React.FC<Props> = ({ onScrollTo }) => {
     () => {
       if (prefersReducedMotion()) return;
       const q = gsap.utils.selector(root);
-      gsap
+      const intro = gsap
         .timeline({ defaults: { ease: 'expo.out' } })
         .fromTo(q('[data-shape-inner]'), { opacity: 0, scale: 0.7, xPercent: -30 }, { opacity: 1, scale: 1, xPercent: 0, duration: 1.6, stagger: 0.08, clearProps: 'opacity,scale,transform' })
         .fromTo(q('[data-hero-card]'), { yPercent: 12, scale: 0.9, opacity: 0 }, { yPercent: 0, scale: 1, opacity: 1, duration: 1.3, clearProps: 'all' }, 0.15)
         .fromTo(q('[data-hero-intro]'), { yPercent: 40, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 1, ease: 'power3.out', stagger: 0.08, clearProps: 'all' }, 0.3)
         .fromTo(q('[data-hero-float-inner]'), { yPercent: 30, opacity: 0, scale: 0.9 }, { yPercent: 0, opacity: 1, scale: 1, duration: 1, clearProps: 'all' }, 0.8);
+      // Dès que le scroll commence, l'intro (temps réel) est terminée d'un coup : seule la position
+      // de scroll pilote ensuite l'image.
+      const finish = () => {
+        if (window.scrollY > 2) intro.progress(1);
+      };
+      window.addEventListener('scroll', finish, { passive: true });
+      return () => window.removeEventListener('scroll', finish);
     },
     { scope: root },
   );
@@ -46,7 +53,7 @@ export const HeroFilm: React.FC<Props> = ({ onScrollTo }) => {
   useScene(
     root,
     LEN,
-    ({ stage, q, wide, tl, ft, cut, cam }) => {
+    ({ stage, q, wide, tl, ft, cut, cam, beat }) => {
       const camera = q('[data-compo]')[0];
       const card = q('[data-hero-stage]')[0];
       const word = SplitText.create(q('[data-kinetic-word]')[0], { type: 'words,chars', mask: 'chars' });
@@ -119,6 +126,9 @@ export const HeroFilm: React.FC<Props> = ({ onScrollTo }) => {
       cut(q('[data-manifesto]'), 2.6);
       ft(manifesto.words, { yPercent: 100 }, { yPercent: 0, stagger: 0.015, duration: 0.2, ease: 'power3.out' }, 2.62);
       ft(q('[data-manifesto-cta]'), { yPercent: 60, opacity: 0 }, { yPercent: 0, opacity: 1, stagger: 0.06, duration: 0.2, ease: 'power3.out' }, 3.0);
+
+      // Beats : cadrage final du mot EVENSIUM, puis (fin de scène) manifeste + CTA.
+      beat(2.1);
 
       // Dès que la caméra avance, les animations CSS infinies (halo, indicateur de scroll), déjà
       // invisibles, sont coupées : sinon elles forcent un repaint permanent derrière le logo agrandi.

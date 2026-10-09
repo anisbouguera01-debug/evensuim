@@ -69,7 +69,7 @@ const LEN = { wide: 5.6, narrow: 5.8 };
 export const SalonsReel: React.FC = () => {
   const root = useRef<HTMLElement>(null);
 
-  useScene(root, LEN, ({ q, wide, tl, T0, L, ft, cut, cam }) => {
+  useScene(root, LEN, ({ q, wide, tl, T0, L, ft, cut, cam, beat }) => {
     const panels = q('[data-salon]');
     const cams = panels.map((p) => p.querySelector<HTMLElement>('[data-cam]')!);
     const intro = SplitText.create(q('[data-salons-title]')[0], { type: 'words,chars', mask: 'chars' });
@@ -125,6 +125,8 @@ export const SalonsReel: React.FC = () => {
     shot(2, c2 + 0.5);
 
     ft(q('[data-salons-line]'), { scaleY: 0 }, { scaleY: 1, duration: END - (T0 + 0.5) }, T0 + 0.5);
+
+    beat(T0 + 1.5, T0 + 3.5);
 
     return () => {
       intro.revert();
