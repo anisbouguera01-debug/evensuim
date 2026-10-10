@@ -16,7 +16,7 @@ const LEN = { wide: 3.2, narrow: 3.8 };
 export const AboutPanorama: React.FC = () => {
   const root = useRef<HTMLElement>(null);
 
-  useScene(root, LEN, ({ stage, q, T0, L, ft, cam, beat }) => {
+  useScene(root, LEN, ({ stage, q, wide, T0, L, ft, cam, beat }) => {
     const track = q('[data-track]')[0];
     // Distance réelle à parcourir (layout, sans transforms), recalculée à chaque refresh.
     const distance = () => Math.max(0, track.scrollWidth - stage.clientWidth);
@@ -39,13 +39,34 @@ export const AboutPanorama: React.FC = () => {
     ft(q('[data-geo]'), { rotate: 45, yPercent: 40 }, { rotate: 225, yPercent: -60, duration: L }, T0);
     // Pan dans chaque photo, du bord gauche au bord droit admissible
     cam(q('[data-depth-frame] [data-cam]'), { scale: 1.25, panX: -1, panY: 0 }, { scale: 1.25, panX: 1, panY: -0.4 }, T0, L);
-    // L'accroche s'allume quand la caméra passe devant
-    ft(lead.words, { opacity: 0.12 }, { opacity: 1, stagger: 0.04, duration: 0.15 }, T0 + 0.6);
-    ft(q('[data-about-body] > *'), { yPercent: 40, opacity: 0 }, { yPercent: 0, opacity: 1, stagger: 0.1, duration: 0.35, ease: 'power2.out' }, T0 + 1.6);
-    ft(q('[data-about-card]'), { scale: 0.8, rotate: -6, opacity: 0 }, { scale: 1, rotate: 0, opacity: 1, duration: 0.5, ease: 'power3.out' }, Math.min(T0 + 2.3, END - 0.6));
-    ft(q('[data-about-mark]'), { rotate: -45, scale: 0.6 }, { rotate: 0, scale: 1, duration: 0.5, ease: 'power3.out' }, Math.min(T0 + 2.35, END - 0.55));
+    // ---- PLANS DU TRAVELLING ----
+    // Un plan par panneau : l'instant où son centre passe au centre de l'écran (mesuré sur le layout,
+    // sans transforms). Le scroll se pose là ; chaque texte a fini d'apparaître quand son panneau arrive.
+    const travel = L - 0.3;
+    const panels = Array.from(track.children) as HTMLElement[];
+    const arrive = (el: Element) => {
+      const panel = panels.find((p) => p === el || p.contains(el));
+      if (!panel) return END;
+      const d = distance() || 1;
+      const x = panel.offsetLeft + panel.offsetWidth / 2 - stage.clientWidth / 2;
+      return T0 + travel * Math.min(1, Math.max(0, x / d));
+    };
+    const tLead = Math.max(T0 + 0.5, arrive(q('[data-about-lead]')[0]));
+    const tBody = Math.max(T0 + 0.5, arrive(q('[data-about-body]')[0]));
+    const tCard = Math.min(END, Math.max(T0 + 0.6, arrive(q('[data-about-card]')[0])));
 
-    beat(T0 + 1.7);
+    // L'accroche s'allume pendant que la caméra arrive devant (terminé à l'arrivée)
+    const leadFrom = Math.max(T0 + 0.05, tLead - 0.8);
+    const leadStagger = Math.max(0.005, (tLead - 0.05 - leadFrom - 0.15) / Math.max(1, lead.words.length - 1));
+    ft(lead.words, { opacity: 0.12 }, { opacity: 1, stagger: leadStagger, duration: 0.15 }, leadFrom);
+    ft(q('[data-about-body] > *'), { yPercent: 40, opacity: 0 }, { yPercent: 0, opacity: 1, stagger: 0.1, duration: 0.35, ease: 'power2.out' }, Math.max(T0, tBody - 0.65));
+    ft(q('[data-about-card]'), { scale: 0.8, rotate: -6, opacity: 0 }, { scale: 1, rotate: 0, opacity: 1, duration: 0.5, ease: 'power3.out' }, Math.min(tCard, END) - 0.55);
+    ft(q('[data-about-mark]'), { rotate: -45, scale: 0.6 }, { rotate: 0, scale: 1, duration: 0.5, ease: 'power3.out' }, Math.min(tCard, END) - 0.5);
+
+    // Téléphone : un panneau = un écran, chaque photo est un plan. Grand écran : plusieurs panneaux
+    // sont visibles à la fois, seuls les panneaux de texte font un plan (centrés, donc lisibles en entier).
+    const textPanels = panels.filter((p) => !p.matches('figure'));
+    beat(...(wide ? textPanels : panels).map(arrive).filter((t) => END - t > 0.6));
 
     return () => {
       title.revert();

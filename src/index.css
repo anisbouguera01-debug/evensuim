@@ -835,3 +835,27 @@ html.scroll-locked body {
 
 
 
+
+/* Snap par scènes (sceneSnap.ts) : repères invisibles posés aux beats des scènes */
+html.scene-snap {
+  scroll-snap-type: y mandatory;
+}
+.snap-rail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 0;
+  pointer-events: none;
+}
+.snap-mark {
+  position: absolute;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+.snap-mark--free {
+  scroll-snap-stop: normal;
+}

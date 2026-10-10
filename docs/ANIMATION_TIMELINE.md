@@ -51,14 +51,20 @@ Global : header verre, menu mobile plein écran, transitions de page aux 4 coule
 
 ## Snap par scènes (`src/animations/sceneSnap.ts`)
 
-Un seul système de calage, sans interception de la molette. Chaque scène déclare ses **beats** (`beat(t)` dans `useScene`) :
-instants de timeline où le cadrage est final ; début (`T0`) et fin de scène sont toujours des beats. Les beats sont convertis
-en positions de scroll à partir du ScrollTrigger de la scène (donc cohérents avec le sticky, le resize et le chargement des images).
+**1 plan = 1 écran de scroll.** Chaque scène déclare ses beats (`beat(t)` dans `useScene`) : instants de timeline où
+le cadrage est final (début, fin d'entrée et fin de scène sont toujours des beats). La section mesure exactement un
+écran par intervalle entre deux beats, et la progression du scroll est convertie en temps de timeline plan par plan
+(linéaire dans chaque plan). Le scroll se pose donc toujours sur un cadrage final, et la même position donne toujours
+la même image.
 
-- geste fini (aucun scroll depuis 140 ms, doigt levé) → la page se pose sur un beat ;
-- **un geste = une étape** : la cible est le beat voisin dans le sens du geste, même si l'inertie a emporté plusieurs écrans ;
-- ancres, flèches, barre de défilement, Début/Fin, recherche dans la page → beat le plus proche ;
-- toute nouvelle molette / touche / toucher interrompt le calage ; aucun calage sous le doigt ;
-- désactivé en `prefers-reduced-motion` et hors de l'accueil ; `window.__SNAP_OFF__ = true` le coupe (tests de déterminisme).
+- **Tactile** (`pointer: coarse`) : CSS Scroll Snap natif. Repères invisibles aux beats avec
+  `scroll-snap-align: start; scroll-snap-stop: always` et `html { scroll-snap-type: y mandatory }`. C'est le téléphone
+  qui arrête son inertie sur le plan suivant : un swipe = un plan, dans les deux sens. Après la dernière scène, un repère
+  plus haut que l'écran laisse le formulaire de contact et le pied de page défiler librement.
+- **Souris / trackpad** (`pointer: fine`) : calage en fin de geste, sans intercepter la molette ; cible = beat voisin
+  dans le sens du geste, même si l'inertie a emporté la page plus loin. Ancres, flèches, barre de défilement, Début/Fin
+  → beat le plus proche.
+- Un seul système actif selon l'appareil ; désactivé en `prefers-reduced-motion` ; `window.__SNAP_OFF__ = true` le coupe
+  (tests de déterminisme). `window.__sceneStops()` renvoie les positions des beats.
 
-Le snap décide **où** on s'arrête ; la timeline (progression = position de scroll) décide **comment** l'image se déroule.
+Le snap décide **où** on s'arrête ; la timeline décide **comment** l'image se déroule entre deux plans.

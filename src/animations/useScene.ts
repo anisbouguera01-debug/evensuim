@@ -29,8 +29,8 @@ export interface SceneContext {
   q: (selector: string) => HTMLElement[];
   wide: boolean;
   tl: gsap.core.Timeline;
-  /** ScrollTrigger de la scène (positions de début / fin en pixels). */
-  st: ScrollTrigger;
+  /** Instant de timeline (écrans) → position de scroll exacte (px), toujours à jour après resize. */
+  toScroll: (t: number) => number;
   /** Instant où la scène devient fixe (1 si la scène a une entrée, 0 sinon). */
   T0: number;
   /** Durée de la partie fixe (écrans). */
@@ -55,6 +55,16 @@ export function sceneStyle(len: SceneLength): CSSProperties {
     ['--scene-w' as string]: 1 + len.wide,
     ['--scene-n' as string]: 1 + len.narrow,
   } as CSSProperties;
+}
+
+/** Un seul refresh global après le montage de toutes les scènes (les hauteurs viennent de changer). */
+let refreshQueued = 0;
+function requestRefresh() {
+  if (refreshQueued) return;
+  refreshQueued = requestAnimationFrame(() => {
+    refreshQueued = 0;
+    ScrollTrigger.refresh();
+  });
 }
 
 export function useScene(
@@ -85,22 +95,20 @@ export function useScene(
           paused: true,
           defaults: { ease: 'none', duration: 1, immediateRender: false, lazy: false },
         });
-        // La progression n'est jamais exactement 0 : à t = 0 pile, GSAP restitue l'état « avant
-        // animation » ou « de départ » selon le sens d'arrivée. À 1e-6, l'état est toujours celui
-        // des plans de départ, quel que soit le chemin.
-        const apply = (p: number) => tl.progress(Math.min(1, Math.max(1e-6, p)));
-        const st = ScrollTrigger.create({
-          trigger: root,
-          start: entry ? 'top bottom' : 'top top',
-          end: 'bottom bottom',
-          onUpdate: (self) => apply(self.progress),
-          // Après resize / chargement des polices : les valeurs calculées (fonctions) sont
-          // réévaluées puis la scène est re-rendue à sa position exacte.
-          onRefresh: (self) => {
-            tl.invalidate();
-            apply(self.progress);
-          },
-        });
+        // Beats (instants où le cadrage est final) : 0, fin d'entrée, ceux déclarés par la scène, fin.
+        // Le ScrollTrigger est créé après `build`, quand on connaît le découpage.
+        let st: ScrollTrigger | null = null;
+        let B: number[] = [0, total];
+        // Position de scroll d'un instant de timeline (inverse du découpage par plans).
+        const toScroll: SceneContext['toScroll'] = (t) => {
+          if (!st) return 0;
+          const n = B.length - 1;
+          let k = 0;
+          while (k < n - 1 && t > B[k + 1]) k++;
+          const span = B[k + 1] - B[k] || 1;
+          const s = k + Math.min(1, Math.max(0, (t - B[k]) / span));
+          return st.start + ((st.end - st.start) * s) / n;
+        };
 
         const q = (sel: string): HTMLElement[] => Array.from<HTMLElement>(root.querySelectorAll<HTMLElement>(sel));
 
@@ -142,13 +150,7 @@ export function useScene(
         // ---- Beats de snap : instants de timeline → positions de scroll (via le ScrollTrigger) ----
         const beats: number[] = [];
         const beat: SceneContext['beat'] = (...times) => beats.push(...times);
-        const cleanup = build({ stage, q, wide, tl, st, T0, L, ft, cut, cam, beat });
-        // Un beat trop proche de la fin n'a pas de sens (le calage final suffit) ; début et fin toujours présents.
-        const marks = Array.from(new Set([0, T0, ...beats.filter((t) => total - t >= 0.5 && t > T0), total]));
-        const unregister = registerSceneStops(root, () =>
-          marks.map((t) => st.start + (st.end - st.start) * (t / total)),
-        );
-
+        const cleanup = build({ stage, q, wide, tl, toScroll, T0, L, ft, cut, cam, beat });
         // ---- Plans fixes : chaque propriété est définie explicitement à TOUT instant [0, total] ----
         // (avant son premier plan, entre deux plans, après le dernier). Le rendu à une position
         // donnée ne dépend donc d'aucune valeur mémorisée ni du chemin pour y arriver.
@@ -173,18 +175,67 @@ export function useScene(
           });
         });
 
-        // La timeline dure exactement la distance de scroll (en écrans) : progression = position.
+        // La timeline dure exactement `total` (en écrans de la version d'origine).
         if (tl.duration() > total + 1e-6 && import.meta.env.DEV) {
           console.warn(`[useScene] timeline (${tl.duration().toFixed(2)}) plus longue que la scène (${total})`);
         }
         tl.to({}, { duration: Math.max(0, total - tl.duration()) }, tl.duration());
+
+        // ---- DÉCOUPAGE EN PLANS : 1 plan = 1 écran de scroll ----
+        // Un beat trop proche du précédent ou de la fin n'a pas de sens ; début, fin d'entrée et fin
+        // sont toujours présents. Chaque intervalle entre deux beats occupe exactement un écran de
+        // scroll : le snap natif (un repère par écran) pose donc toujours la scène sur un cadrage final.
+        // Beats trop rapprochés (< 0.35 écran de timeline) : on garde le dernier (cadrage le plus avancé).
+        const cand = [...beats.filter((t) => t > T0 + 0.3 && total - t >= 0.5)].sort((a, b) => a - b);
+        B = [0, T0];
+        for (const t of cand) {
+          if (t - B[B.length - 1] < 0.35) {
+            if (B.length > 2) B[B.length - 1] = t;
+          } else B.push(t);
+        }
+        B.push(total);
+        B = Array.from(new Set(B));
+        const n = B.length - 1;
+        // Hauteur de la section = n écrans de scroll (+ 1 écran pour la scène sans entrée, le hero).
+        const screens = String(n + (entry ? 0 : 1));
+        root.style.setProperty('--scene-w', screens);
+        root.style.setProperty('--scene-n', screens);
+
+        // Progression du scroll (0→1) → instant de timeline, linéaire dans chaque plan.
+        // Jamais exactement 0 : à t = 0 pile, GSAP restitue l'état « avant » ou « de départ » selon le
+        // sens d'arrivée ; à 1e-6 c'est toujours l'état de départ, quel que soit le chemin.
+        const timeAt = (p: number) => {
+          const s = Math.min(1, Math.max(0, p)) * n;
+          const k = Math.min(n - 1, Math.floor(s));
+          return B[k] + (s - k) * (B[k + 1] - B[k]);
+        };
+        const apply = (p: number) => tl.time(Math.min(total, Math.max(1e-6, timeAt(p))));
+        st = ScrollTrigger.create({
+          trigger: root,
+          start: entry ? 'top bottom' : 'top top',
+          end: 'bottom bottom',
+          onUpdate: (self) => apply(self.progress),
+          // Après resize / chargement des polices : les valeurs calculées (fonctions) sont
+          // réévaluées puis la scène est re-rendue à sa position exacte.
+          onRefresh: (self) => {
+            tl.invalidate();
+            apply(self.progress);
+          },
+        });
+        const trigger = st;
+        const unregister = registerSceneStops(root, () =>
+          B.map((_, i) => trigger.start + ((trigger.end - trigger.start) * i) / n),
+        );
         // Premier rendu explicite à la position courante.
         apply(st.progress);
+        requestRefresh();
 
         return () => {
           // tl et st sont créés dans le contexte matchMedia : ils sont révertés (styles restaurés)
           // et supprimés automatiquement à la sortie du contexte (changement de breakpoint, démontage).
           unregister();
+          root.style.removeProperty('--scene-w');
+          root.style.removeProperty('--scene-n');
           if (typeof cleanup === 'function') cleanup();
         };
       });

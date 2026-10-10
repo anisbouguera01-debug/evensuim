@@ -127,8 +127,8 @@ export const HeroFilm: React.FC<Props> = ({ onScrollTo }) => {
       ft(manifesto.words, { yPercent: 100 }, { yPercent: 0, stagger: 0.015, duration: 0.2, ease: 'power3.out' }, 2.62);
       ft(q('[data-manifesto-cta]'), { yPercent: 60, opacity: 0 }, { yPercent: 0, opacity: 1, stagger: 0.06, duration: 0.2, ease: 'power3.out' }, 3.0);
 
-      // Beats : cadrage final du mot EVENSIUM, puis (fin de scène) manifeste + CTA.
-      beat(2.1);
+      // Beats : caméra posée sur la carte, mot EVENSIUM construit, puis (fin de scène) manifeste + CTA.
+      beat(1.0, 2.1);
 
       // Dès que la caméra avance, les animations CSS infinies (halo, indicateur de scroll), déjà
       // invisibles, sont coupées : sinon elles forcent un repaint permanent derrière le logo agrandi.

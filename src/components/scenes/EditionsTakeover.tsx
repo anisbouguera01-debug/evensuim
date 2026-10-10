@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { ArrowRight, Calendar, ChevronLeft, ChevronRight, MapPin, Sparkles } from 'lucide-react';
 import { PageId } from '../../types';
 import type { ImageKey } from '../../assets/images';
-import { ScrollTrigger, SplitText } from '../../animations/gsap';
+import { SplitText } from '../../animations/gsap';
 import { useScene, sceneStyle } from '../../animations/useScene';
 import { CameraImage } from '../motion/CameraImage';
 import { useSmoothScroll } from '../../animations/SmoothScroll';
@@ -57,12 +57,12 @@ const LEN = { wide: 6.9, narrow: 6.9 };
 
 export const EditionsTakeover: React.FC<Props> = ({ setCurrentPage }) => {
   const root = useRef<HTMLElement>(null);
-  const stRef = useRef<ScrollTrigger | null>(null);
+  const toScrollRef = useRef<((t: number) => number) | null>(null);
   const labels = useRef<number[]>([]);
   const totalRef = useRef(0);
   const { scrollTo } = useSmoothScroll();
 
-  useScene(root, LEN, ({ q, wide, st, T0, L, ft, cut, cam, beat }) => {
+  useScene(root, LEN, ({ q, wide, toScroll, T0, L, ft, cut, cam, beat }) => {
     const cards = q('[data-edition]');
     const cams = cards.map((c) => c.querySelector<HTMLElement>('[data-cam]')!);
     const end = q('[data-edition-end]')[0];
@@ -124,28 +124,29 @@ export const EditionsTakeover: React.FC<Props> = ({ setCurrentPage }) => {
     // Beats = les lectures d'édition (le dernier label tombe sur la fin de scène, déjà un beat).
     beat(...labels.current.slice(0, -1));
 
-    stRef.current = st;
+    toScrollRef.current = toScroll;
     totalRef.current = T0 + L;
     return () => {
       heading.revert();
       titles.forEach((t) => t.revert());
-      stRef.current = null;
+      toScrollRef.current = null;
     };
   });
 
   /** Flèches : sautent à l'édition précédente / suivante dans la timeline. */
   const step = (dir: -1 | 1) => {
-    const st = stRef.current;
-    if (!st) {
+    const toScroll = toScrollRef.current;
+    if (!toScroll) {
       scrollTo('#upcoming');
       return;
     }
     const total = totalRef.current || 1;
     // instant de timeline (en écrans) → position de scroll exacte
-    const points = labels.current.map((t) => st.start + (st.end - st.start) * (t / total));
+    // mêmes points que les beats (donc que les repères de snap) : chaque édition lue, puis la fin
+    const points = [...labels.current.slice(0, -1), total].map((t) => toScroll(t));
     const y = window.scrollY;
     const next = dir > 0 ? points.find((p) => p > y + 8) : [...points].reverse().find((p) => p < y - 8);
-    scrollTo(next ?? (dir > 0 ? st.end : st.start), { duration: 1.2 });
+    scrollTo(next ?? toScroll(dir > 0 ? total : 0), { duration: 1.2 });
   };
 
   return (
